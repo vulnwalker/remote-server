@@ -69,6 +69,18 @@ switch ($pages) {
     include "pages/bandingDatabaseLocal/bandingDatabaseLocal.php";
     break;
   }
+  case 'bandingDatabaseServer':{
+    checkLogin();
+    include "pages/bandingDatabaseServer/bandingDatabaseServer.php";
+    break;
+  }
+  case 'logout':{
+    $_SESSION['username'] = '';
+    unset($_SESSION['username']);
+    session_destroy();
+    checkLogin();
+    break;
+  }
   default:{
     checkLogin();
     include "pages/dashboard.php";

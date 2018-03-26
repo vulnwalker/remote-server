@@ -63,33 +63,6 @@ class baseObject extends Config{
   function setMenuEdit(){
     $setMenuEdit = "
     <div id='header-nav-right'>
-    <a href='#' class='hdr-btn' id='fullscreen-btn' title='Fullscreen'>
-      <i class='glyph-icon icon-arrows-alt'></i>
-    </a>
-    <a href='#' class='hdr-btn popover-button' title='Search' data-placement='bottom' data-id='#popover-search'>
-      <i class='glyph-icon icon-search'></i>
-    </a>
-    <div class='hide' id='popover-search'>
-      <div class='pad5A box-md'>
-          <div class='input-group'>
-              <input type='text' class='form-control' placeholder='Search terms here ...'>
-              <span class='input-group-btn'>
-                  <a class='btn btn-primary' href='#'>Search</a>
-              </span>
-          </div>
-      </div>
-    </div>
-
-    <a class='header-btn' id='logout-btn' href='lockscreen-3.html' title='Baru'>
-      <i class='glyph-icon icon-plus'></i>
-    </a>
-    <a class='header-btn' id='logout-btn' href='lockscreen-3.html' title='Edit'>
-      <i class='glyph-icon icon-pencil'></i>
-    </a>
-    <a class='header-btn' id='logout-btn' href='lockscreen-3.html' title='Hapus'>
-      <i class='glyph-icon icon-trash'></i>
-    </a>
-
     </div>
 
     ";
@@ -149,7 +122,11 @@ class baseObject extends Config{
     <link rel='stylesheet' type='text/css' href='assets/icons/fontawesome/fontawesome.css'>
     <link rel='stylesheet' type='text/css' href='assets/icons/linecons/linecons.css'>
     <link rel='stylesheet' type='text/css' href='assets/icons/spinnericon/spinnericon.css'>
-
+    <link rel='stylesheet' type='text/css' href='assets/icons/iconic/iconic.css'>
+    <link rel='stylesheet' type='text/css' href='assets/icons/elusive/elusive.css'>
+    <link rel='stylesheet' type='text/css' href='assets/icons/meteocons/meteocons.css'>
+    <link rel='stylesheet' type='text/css' href='assets/icons/spinnericon/spinnericon.css'>
+    <link rel='stylesheet' type='text/css' href='assets/icons/typicons/typicons.css'>
     <link rel='stylesheet' type='text/css' href='assets/widgets/accordion-ui/accordion.css'>
     <link rel='stylesheet' type='text/css' href='assets/widgets/calendar/calendar.css'>
     <link rel='stylesheet' type='text/css' href='assets/widgets/carousel/carousel.css'>
@@ -298,36 +275,7 @@ class baseObject extends Config{
         </a>
         </div>
         <div id='header-nav-left'>
-        <div class='user-account-btn dropdown'>
-          <a href='#' title='My Account' class='user-profile clearfix' data-toggle='dropdown'>
-              <img width='28' src='assets/image-resources/gravatar.jpg' alt='Profile image'>
-              <span>".$getUser['nama']."</span>
-              <i class='glyph-icon icon-angle-down'></i>
-          </a>
-          <div class='dropdown-menu float-left'>
-              <div class='box-sm'>
-                  <div class='login-box clearfix'>
-                      <div class='user-img'>
-                          <a href='#' title='' class='change-img'>Change photo</a>
-                          <img src='assets/image-resources/gravatar.jpg' alt=''>
-                      </div>
-                      <div class='user-info'>
-                          <span>
-                              ".$getUser['nama']."
-                          </span>
-                          <a href='#' title='Edit profile'>Edit profile</a>
-                          <a href='#' title='View notifications'>View notifications</a>
-                      </div>
-                  </div>
-                  <div class='pad5A button-pane button-pane-alt text-center'>
-                      <a href='#' class='btn display-block font-normal btn-danger'>
-                          <i class='glyph-icon icon-power-off'></i>
-                          Logout
-                      </a>
-                  </div>
-              </div>
-          </div>
-        </div>
+
         </div><!-- #header-nav-left -->
 
         ".$this->setMenuEdit()."
@@ -399,56 +347,68 @@ class baseObject extends Config{
     $arraySideBar = array(
         array("dashboard","
             <a href='pages.php' title='Dashboard'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-area-chart'></i>
                 <span>Dashboard</span>
             </a>
             "),
         array("refServer","
             <a href='pages.php?page=refServer' title='Referensi Server'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-cloud'></i>
                 <span>Referensi Server</span>
             </a>
             "),
         array("fileManager","
             <a href='pages.php?page=fileManager' title='fileManager'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-folder-open'></i>
                 <span>File Manager</span>
             </a>
             "),
         array("refRelease","
             <a href='pages.php?page=refRelease' title='refRelease'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-rocket'></i>
                 <span>Referensi Release</span>
             </a>
             "),
         array("historyBackup","
             <a href='pages.php?page=historyBackup' title='historyBackup'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-cloud-download'></i>
                 <span>History Backup</span>
             </a>
             "),
         array("refDirCheck","
             <a href='pages.php?page=refDirCheck' title='refDirCheck'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-newspaper-o'></i>
                 <span>Referensi Check File</span>
             </a>
             "),
         array("bandingLocalFile","
             <a href='pages.php?page=bandingLocalFile' title='bandingLocalFile'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-typicons-tags'></i>
                 <span>Banding Local File</span>
             </a>
             "),
         array("bandingServerFile","
             <a href='pages.php?page=bandingServerFile' title='bandingServerFile'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-typicons-code-outline'></i>
                 <span>Banding Server File</span>
             </a>
             "),
         array("bandingDatabaseLocal","
             <a href='pages.php?page=bandingDatabaseLocal' title='bandingDatabaseLocal'>
-                <i class='glyph-icon icon-linecons-tv'></i>
+                <i class='glyph-icon icon-iconic-layers-alt'></i>
                 <span>Banding Database Local</span>
+            </a>
+            "),
+        array("bandingDatabaseServer","
+            <a href='pages.php?page=bandingDatabaseServer' title='bandingDatabaseServer'>
+                <i class='glyph-icon icon-linecons-inbox'></i>
+                <span>Banding Database Server</span>
+            </a>
+            "),
+        array("logout","
+            <a href='pages.php?page=logout' title='bandingDatabaseServer'>
+                <i class='glyph-icon icon-power-off'></i>
+                <span>Logout</span>
             </a>
             "),
 
@@ -456,7 +416,15 @@ class baseObject extends Config{
 
     $isi = $_GET['page'];
     for($i=0;$i<count($arraySideBar);$i++) {
-      $Sel = $isi==$arraySideBar[$i][0]?" activeSidebar ":"";
+      if(!isset($isi)){
+        if($arraySideBar[$i][0] == 'dashboard'){
+          $Sel = 'activeSidebar';
+        }else{
+          $Sel = "";
+        }
+      }else{
+        $Sel = $isi==$arraySideBar[$i][0]?" activeSidebar ":"";
+      }
       $listSideBar .= "<li class='$Sel'>{$arraySideBar[$i][1]}</li>";
     }
 
@@ -660,6 +628,21 @@ class baseObject extends Config{
     ";
 
     return $pageShow;
+  }
+
+  function switchOption($id,$value,$params){
+    if($value == 'LIVE' || $value = 'ACTIVE'){
+      $value = "on";
+    }else{
+      $value = "off";
+    }
+    $html =
+    "<div class='bootstrap-switch bootstrap-switch-wrapper bootstrap-switch-medium bootstrap-switch-animate bootstrap-switch-$value'>
+      <div class='bootstrap-switch-container'>
+        <input type='checkbox' data-on-color='primary' name='$id' id='$id'  class='input-switch' checked='' $params data-size='medium' data-on-text='On' data-off-text='Off'>
+      </div>
+    </div>";
+    return $html;
   }
 
 

@@ -682,8 +682,8 @@ class manageServer extends baseObject{
     $modelName = '"MODELNAME=\"';
     $kutip = '"';
     $modelNameKutip = '"model name"';
-    return $this->sshCommand($sshConnection,"echo -n $modelName $kutip
-    grep -m 1 $modelNameKutip /proc/cpuinfo | cut -d: -f2 | sed -e 's/^ *//' | sed -e 's/$/$kutip/'");
+    return str_replace('MODELNAME="','',$this->sshCommand($sshConnection,"echo -n $modelName $kutip
+    grep -m 1 $modelNameKutip /proc/cpuinfo | cut -d: -f2 | sed -e 's/^ *//' | sed -e 's/$/$kutip/'"));
   }
   function getOperationSystem($id) {
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
@@ -750,9 +750,9 @@ class manageServer extends baseObject{
     $namaAlias = $getDataServer['alias'];
     $this->sshCommand($sshConnection,"mkdir $backupLocation");
     $fileName = date("Y-m-d")."-".date("H:i")."-".$namaAlias."-".$databaseName;
-    $dumpStruktur = "mysqldump -u$usernameDatabase -p$passwordDatabase -f --no-data --skip-events --skip-routines --skip-triggers $databaseName | gz > $backupLocation/$fileName.struk.sql.gz";
-    $dumpTriger = "mysqldump -u$usernameDatabase -p$passwordDatabase -f --routines --triggers --no-create-info --no-data --no-create-db --skip-opt $databaseName | gz > $backupLocation/$fileName.triger.sql.gz";
-    $dumpData = "mysqldump -u$usernameDatabase -p$passwordDatabase --complete-insert --no-create-db --no-create-info --skip-events --skip-routines --skip-triggers $databaseName | gz > $backupLocation/$fileName.data.sql.gz";
+    $dumpStruktur = "mysqldump -u$usernameDatabase -p$passwordDatabase -f --no-data --skip-events --skip-routines --skip-triggers $databaseName | gzip > $backupLocation/$fileName.struk.sql.gz";
+    $dumpTriger = "mysqldump -u$usernameDatabase -p$passwordDatabase -f --routines --triggers --no-create-info --no-data --no-create-db --skip-opt $databaseName | gzip > $backupLocation/$fileName.triger.sql.gz";
+    $dumpData = "mysqldump -u$usernameDatabase -p$passwordDatabase --complete-insert --no-create-db --no-create-info --skip-events --skip-routines --skip-triggers $databaseName | gzip > $backupLocation/$fileName.data.sql.gz";
     $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '".$parameter['idRelease']."'"));
     $gzRelease = "zip -r  $backupLocation/$fileName.zip ".$getDataRelease['directory_location']."  ";
     if(!empty($parameter['struktur'])){

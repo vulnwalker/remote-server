@@ -1,8 +1,8 @@
 <?php
 session_start();
-class bandingDatabaseLocal extends baseObject{
-  var $Prefix = "bandingDatabaseLocal";
-  var $formName = "bandingDatabaseLocalForm";
+class bandingDatabaseServer extends baseObject{
+  var $Prefix = "bandingDatabaseServer";
+  var $formName = "bandingDatabaseServerForm";
   var $tableName = "ref_server";
   var $idServer = 1000;
   var $username = "";
@@ -30,7 +30,7 @@ class bandingDatabaseLocal extends baseObject{
 	  switch($_GET['API']){
 
       case 'checkStruktur':{
-        $jsonFile = $this->listStruktur($this->idServer,$databaseSumber);
+        $jsonFile = $this->listStruktur($this->idServer,$idRelease);
         $decodeJsonFile = json_decode($jsonFile);
         $arrayFile = array();
         for ($i=0; $i < sizeof($decodeJsonFile) ; $i++) {
@@ -71,7 +71,7 @@ class bandingDatabaseLocal extends baseObject{
   		break;
   		}
       case 'checkTriger':{
-        $jsonFile = $this->listTriger($this->idServer,$databaseSumber);
+        $jsonFile = $this->listTriger($this->idServer,$idRelease);
         $decodeJsonFile = json_decode($jsonFile);
         $arrayFile = array();
         for ($i=0; $i < sizeof($decodeJsonFile) ; $i++) {
@@ -117,7 +117,7 @@ class bandingDatabaseLocal extends baseObject{
   		break;
   		}
       case 'checkRoutine':{
-        $jsonFile = $this->listRoutine($this->idServer,$databaseSumber);
+        $jsonFile = $this->listRoutine($this->idServer,$idRelease);
         $decodeJsonFile = json_decode($jsonFile);
         $arrayFile = array();
         for ($i=0; $i < sizeof($decodeJsonFile) ; $i++) {
@@ -125,7 +125,7 @@ class bandingDatabaseLocal extends baseObject{
           if ($this->filterExtension($decodeJsonFile[$i]->routineName) == 0) {
             if(!empty($filterWord)){
                 if($this->unFilterExtension($decodeJsonFile[$i]->routineName,$filterWord) != 0){
-                    $jsonRoutineParameter = $this->listParameter($this->idServer,$databaseSumber,$decodeJsonFile[$i]->routineName,$decodeJsonFile[$i]->routineType);
+                    $jsonRoutineParameter = $this->listParameter($this->idServer,$idRelease,$decodeJsonFile[$i]->routineName,$decodeJsonFile[$i]->routineType);
                     $decodeJSONParameter = json_decode($jsonRoutineParameter);
                     for ($a=0; $a < sizeof($decodeJSONParameter); $a++) {
                       $arrayRoutineParameters[] = array(
@@ -142,7 +142,7 @@ class bandingDatabaseLocal extends baseObject{
                     );
                 }
             }else{
-              $jsonRoutineParameter = $this->listParameter($this->idServer,$databaseSumber,$decodeJsonFile[$i]->routineName,$decodeJsonFile[$i]->routineType);
+              $jsonRoutineParameter = $this->listParameter($this->idServer,$idRelease,$decodeJsonFile[$i]->routineName,$decodeJsonFile[$i]->routineType);
               $decodeJSONParameter = json_decode($jsonRoutineParameter);
               for ($a=0; $a < sizeof($decodeJSONParameter); $a++) {
                 $arrayRoutineParameters[] = array(
@@ -182,7 +182,7 @@ class bandingDatabaseLocal extends baseObject{
   		break;
   		}
       case 'showListStruktur':{
-        $jsonFile = $this->listStruktur($this->idServer,$databaseSumber);
+          $jsonFile = $this->listStruktur($this->idServer,$idRelease);
           $decodeJsonFile = json_decode($jsonFile);
           $arrayFile = array();
           $nomorUrut = 1;
@@ -208,7 +208,7 @@ class bandingDatabaseLocal extends baseObject{
   		break;
   		}
       case 'showListTriger':{
-         $jsonFile = $this->listTriger($this->idServer,$databaseSumber);
+         $jsonFile = $this->listTriger($this->idServer,$idRelease);
           $decodeJsonFile = json_decode($jsonFile);
           $arrayFile = array();
           $nomorUrut = 1;
@@ -233,7 +233,7 @@ class bandingDatabaseLocal extends baseObject{
   		break;
   		}
       case 'showListRoutine':{
-         $jsonFile = $this->listRoutine($this->idServer,$databaseSumber);
+         $jsonFile = $this->listRoutine($this->idServer,$idRelease);
           $decodeJsonFile = json_decode($jsonFile);
           $arrayFile = array();
           $nomorUrut = 1;
@@ -268,7 +268,7 @@ class bandingDatabaseLocal extends baseObject{
           $tableName = $explodeListFile[$nomorUrut - 1]->tableName;
           $columnName = $explodeListFile[$nomorUrut - 1]->columnName;
           $typeData = $explodeListFile[$nomorUrut - 1]->typeData;
-          $jsonDatabaseTujuan = json_decode($this->listStrukturDatabaseTujuan($this->idServer,$databaseTarget,$tableName,$columnName));
+          $jsonDatabaseTujuan = json_decode($this->listStrukturDatabaseTujuan($serverTarget,$idRelease,$tableName,$columnName));
           $tableNameTujuan = $jsonDatabaseTujuan[0]->tableName;
           $columnNameTujuan = $jsonDatabaseTujuan[0]->columnName;
           $typeDataTujuan = $jsonDatabaseTujuan[0]->typeData;
@@ -323,7 +323,7 @@ class bandingDatabaseLocal extends baseObject{
           $actionTiming = $explodeListFile[$nomorUrut - 1]->actionTiming;
           $eventManipulation = $explodeListFile[$nomorUrut - 1]->eventManipulation;
           $tableName = $explodeListFile[$nomorUrut - 1]->tableName;
-          $jsonDatabaseTujuan = json_decode($this->listTrigerDatabaseTujuan($this->idServer,$databaseTarget,$trigerName));
+          $jsonDatabaseTujuan = json_decode($this->listTrigerDatabaseTujuan($serverTarget,$idRelease,$trigerName));
           $trigerNameTujuan = $jsonDatabaseTujuan[0]->trigerName;
           $actionTrigerTujuan = $this->dropTrashString($this->hexDecode($jsonDatabaseTujuan[0]->actionTriger));
           $actionTimingTujuan = $jsonDatabaseTujuan[0]->actionTiming;
@@ -389,11 +389,11 @@ class bandingDatabaseLocal extends baseObject{
           $routineParameters = $explodeListFile[$nomorUrut - 1]->routineParameters;
           $actionRoutine = $this->dropTrashString($this->hexDecode($explodeListFile[$nomorUrut - 1]->actionRoutine));
 
-          $jsonDatabaseTujuan = json_decode($this->listRoutineDatabaseTujuan($this->idServer,$databaseTarget,$routineName));
+          $jsonDatabaseTujuan = json_decode($this->listRoutineDatabaseTujuan($serverTarget,$idRelease,$routineName));
           $routineNameTujuan = $jsonDatabaseTujuan[0]->routineName;
           $actionRoutineTujuan = $this->dropTrashString($this->hexDecode($jsonDatabaseTujuan[0]->actionRoutine));
           $routineTypeTujuan = $jsonDatabaseTujuan[0]->routineType;
-          $jsonRoutineParameter = $this->listParameter($this->idServer,$databaseTarget,$routineName,$routineType);
+          $jsonRoutineParameter = $this->listParameter($serverTarget,$idRelease,$routineName,$routineType);
           $decodeJSONParameter = json_decode($jsonRoutineParameter);
           for ($a=0; $a < sizeof($decodeJSONParameter); $a++) {
             $arrayRoutineParameters[] = array(
@@ -450,15 +450,15 @@ class bandingDatabaseLocal extends baseObject{
   		break;
   		}
       case 'pushStrukturSelected':{
-          $content = array("valueStruktur" => $bandingDatabaseLocal_cb[0] ,"jumlahData" => sizeof($bandingDatabaseLocal_cb));
+          $content = array("valueStruktur" => $bandingDatabaseServer_cb[0] ,"jumlahData" => sizeof($bandingDatabaseServer_cb));
       break;
       }
       case 'pushTrigerSelected':{
-          $content = array("valueTriger" => $bandingDatabaseLocal_cb[0] ,"jumlahData" => sizeof($bandingDatabaseLocal_cb));
+          $content = array("valueTriger" => $bandingDatabaseServer_cb[0] ,"jumlahData" => sizeof($bandingDatabaseServer_cb));
       break;
       }
       case 'pushRoutineSelected':{
-          $content = array("valueRoutine" => $bandingDatabaseLocal_cb[0] ,"jumlahData" => sizeof($bandingDatabaseLocal_cb));
+          $content = array("valueRoutine" => $bandingDatabaseServer_cb[0] ,"jumlahData" => sizeof($bandingDatabaseServer_cb));
       break;
       }
       case 'tableResultStruktur':{
@@ -477,7 +477,7 @@ class bandingDatabaseLocal extends baseObject{
         if($nomorUrut == ($jumlahData + 1)){
           $sukses = "OK";
         }else{
-          $valueStruktur = $bandingDatabaseLocal_cb[$nomorUrut - 1];
+          $valueStruktur = $bandingDatabaseServer_cb[$nomorUrut - 1];
           $decodeJSONCheckbox = json_decode($valueStruktur);
           $tableName = $decodeJSONCheckbox->tableName;
           $columnName = $decodeJSONCheckbox->columnName;
@@ -485,15 +485,15 @@ class bandingDatabaseLocal extends baseObject{
           $errorCode = $decodeJSONCheckbox->errorCode;
           if(strpos($errorCode, "1") !== false){
              $namaFile = "/tmp/".$tableName.".VulnWalker";
-             file_put_contents($namaFile,$this->dumpTable($this->idServer,$databaseSumber,$tableName));
-             $this->pushFileSelected($this->idServer,$namaFile);
-             $this->createTable($this->idServer,$databaseTarget,str_replace(" ","",$namaFile));
+             file_put_contents($namaFile,$this->dumpTable($this->idServer,$idRelease,$tableName));
+             $this->pushFileSelected($serverTarget,$namaFile);
+             $this->createTable($serverTarget,$idRelease,str_replace(" ","",$namaFile));
           }
           if(strpos($errorCode, "2") !== false){
-             $cek =  $this->addColumn($this->idServer,$databaseTarget,$tableName,$columnName,$typeData);
+             $cek =  $this->addColumn($serverTarget,$idRelease,$tableName,$columnName,$typeData);
           }
           if(strpos($errorCode, "3") !== false){
-             $cek =  $this->changeTypeData($this->idServer,$databaseTarget,$tableName,$columnName,$typeData);
+             $cek =  $this->changeTypeData($serverTarget,$idRelease,$tableName,$columnName,$typeData);
           }
           $persen = ($nomorUrut / $jumlahData) * 100;
           $persenText = $persen."%";
@@ -512,7 +512,7 @@ class bandingDatabaseLocal extends baseObject{
         if($nomorUrut == ($jumlahData + 1)){
           $sukses = "OK";
         }else{
-          $valueTriger = $bandingDatabaseLocal_cb[$nomorUrut - 1];
+          $valueTriger = $bandingDatabaseServer_cb[$nomorUrut - 1];
           $decodeJSONCheckbox = json_decode($valueTriger);
           $namaTriger = $decodeJSONCheckbox->namaTriger;
           $isiTriger = $decodeJSONCheckbox->isiTriger;
@@ -521,7 +521,7 @@ class bandingDatabaseLocal extends baseObject{
           $tableName = $decodeJSONCheckbox->tableName;
           $errorCode = $decodeJSONCheckbox->errorCode;
           if(!empty($errorCode)){
-            $cek = $this->replaceTriger($this->idServer,$databaseTarget,$namaTriger,$isiTriger,$actionTiming,$eventManipulation,$tableName);
+            $cek = $this->replaceTriger($serverTarget,$idRelease,$namaTriger,$isiTriger,$actionTiming,$eventManipulation,$tableName);
           }
           $persen = ($nomorUrut / $jumlahData) * 100;
           $persenText = $persen."%";
@@ -540,7 +540,7 @@ class bandingDatabaseLocal extends baseObject{
         if($nomorUrut == ($jumlahData + 1)){
           $sukses = "OK";
         }else{
-          $valueTriger = $bandingDatabaseLocal_cb[$nomorUrut - 1];
+          $valueTriger = $bandingDatabaseServer_cb[$nomorUrut - 1];
           $decodeJSONCheckbox = json_decode($valueTriger);
           $routineName = $decodeJSONCheckbox->routineName;
           $routineType = $decodeJSONCheckbox->routineType;
@@ -549,9 +549,9 @@ class bandingDatabaseLocal extends baseObject{
           $errorCode = $decodeJSONCheckbox->errorCode;
           if(!empty($errorCode)){
               if($routineType == 'FUNCTION'){
-                $cek = $this->createRoutineFunction($this->idServer,$databaseTarget,$routineName,$routineValue,json_encode($routineParameters));
+                $cek = $this->createRoutineFunction($serverTarget,$idRelease,$routineName,$routineValue,json_encode($routineParameters));
               }else{
-                $cek = $this->createRoutineStoreProcedur($this->idServer,$databaseTarget,$routineName,$routineValue,json_encode($routineParameters));
+                $cek = $this->createRoutineStoreProcedur($serverTarget,$idRelease,$routineName,$routineValue,json_encode($routineParameters));
               }
           }
           $persen = ($nomorUrut / $jumlahData) * 100;
@@ -642,12 +642,12 @@ class bandingDatabaseLocal extends baseObject{
   // }
   function loadScript(){
     return "
-    <script type='text/javascript' src='js/bandingDatabaseLocal/bandingDatabaseLocal.js'></script>
+    <script type='text/javascript' src='js/bandingDatabaseServer/bandingDatabaseServer.js'></script>
     <script type='text/javascript' src='assets/widgets/daterangepicker/daterangepicker.js'></script>
     <script type='text/javascript' src='assets/widgets/daterangepicker/moment.js'></script>
     <script type='text/javascript'>
     $( document ).ready(function() {
-          bandingDatabaseLocal.createDialog();
+          bandingDatabaseServer.createDialog();
           $('#kurunTanggal').daterangepicker({
               format: 'DD-MM-YYYY'
           });
@@ -669,38 +669,26 @@ class bandingDatabaseLocal extends baseObject{
     return $setMenuEdit;
   }
   function pageContent(){
-    $arrayListDatabase = array();
-    $explodeDatabase = json_decode($this->listDatabase($this->idServer));
-    $no = 1;
-    for ($i=0; $i < sizeof($explodeDatabase); $i++) {
-      $arrayListDatabase[] = array($explodeDatabase[$i]->databasename,$explodeDatabase[$i]->databasename);
-    }
+    $cmbRelease  =  $this->cmbQuery("idRelease","","select id,nama_release from ref_release "," class='form-control'","-- RELEASE --");
+    $cmbTarget  =  $this->cmbQuery("serverTarget","","select id,nama_server from ref_server "," class='form-control'","-- TARGET SERVER --");
     $arrayOptions = array(
       array("struktur","STRUKTUR"),
       array("triger","TRIGER"),
       array("routine","ROUTINE"),
     );
-    $cmbSumber  =  $this->cmbArray("databaseSumber","",$arrayListDatabase,"-- DATABASE SUMBER --","class='form-control'");
-    $cmbTarget  =  $this->cmbArray("databaseTarget","",$arrayListDatabase,"-- DATABASE TUJUAN --","class='form-control'");
     $cmbOption  =  $this->cmbArray("optionBanding","",$arrayOptions,"-- JENIS --","class='form-control' onchange=$this->Prefix.optionChanged();");
     $pageContent = "
     <div id='page-title'>
-      <h2>CHECK DATABASE LOCAL</h2>
+      <h2>CHECK DATABASE SERVER</h2>
     </div>
     <div class='panel'>
       <div class='panel-body'>
           <div class='example-box-wrapper'>
             <form class='form-horizontal bordered-row' name='".$this->formName."_new' id='".$this->formName."_new'>
                 <div class='form-group'>
-                    <label class='col-sm-1 control-label'>SUMBER</label>
+                    <label class='col-sm-1 control-label'>RELEASE</label>
                     <div class='col-sm-11'>
-                        $cmbSumber
-                    </div>
-                </div>
-                <div class='form-group'>
-                    <label class='col-sm-1 control-label'>TARGET</label>
-                    <div class='col-sm-11'>
-                        $cmbTarget
+                        $cmbRelease
                     </div>
                 </div>
                 <div class='form-group'>
@@ -710,12 +698,18 @@ class bandingDatabaseLocal extends baseObject{
                     </div>
                 </div>
                 <div class='form-group'>
+                    <label class='col-sm-1 control-label'>SERVER</label>
+                    <div class='col-sm-11'>
+                        $cmbTarget
+                    </div>
+                </div>
+
+                <div class='form-group'>
                     <label class='col-sm-1 control-label'>OPTION</label>
                     <div class='col-sm-11'>
                         $cmbOption
                     </div>
                 </div>
-
                 <div class='form-group' style='float:right;'>
                     <div class='col-sm-12'>
                     <button type='button' onclick=$this->Prefix.showListStruktur(); class='btn btn-alt btn-hover btn-success' id='buttonShow'>
@@ -867,7 +861,9 @@ class bandingDatabaseLocal extends baseObject{
     $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"mysql -u".$userMysql." -p".$databasePassword." -s -e 'select SCHEMA_NAME,DEFAULT_COLLATION_NAME from information_schema.SCHEMATA;' | awk '$contentAWK'"));
     return "[".str_replace(" ","",$comand)."]";
   }
-  function dumpTable($id,$databaseName,$tableName) {
+  function dumpTable($id,$idRelease,$tableName) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $databasePassword = $getDataServer["password_mysql"];
     $userMysql = $getDataServer["user_mysql"];
@@ -876,7 +872,9 @@ class bandingDatabaseLocal extends baseObject{
     $comand = $this->sshCommand($sshConnection,"mysqldump -u".$userMysql." -p".$databasePassword." --no-data --skip-events --skip-routines --skip-triggers $databaseName $tableName");
     return $comand;
   }
-  function createTable($id,$databaseName,$namaFile) {
+  function createTable($id,$idRelease,$namaFile) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $databasePassword = $getDataServer["password_mysql"];
     $userMysql = $getDataServer["user_mysql"];
@@ -885,7 +883,9 @@ class bandingDatabaseLocal extends baseObject{
      $this->sshCommand($sshConnection,"mysql -u".$userMysql." -p".$databasePassword." $databaseName < $namaFile ");
     return "mysql -u".$userMysql." -p".$databasePassword." $databaseName < $namaFile " ;
   }
-  function listStruktur($id,$databaseName) {
+  function listStruktur($id,$idRelease) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -896,7 +896,9 @@ class bandingDatabaseLocal extends baseObject{
     $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -s -e 'select TABLE_NAME,COLUMN_NAME,COLUMN_TYPE from information_schema.COLUMNS where TABLE_SCHEMA= $stringDatabaseName;' | awk '$contentAWK'"));
     return "[".str_replace(" ","",$comand)."]";
   }
-  function replaceTriger($id,$databaseName,$namaTriger,$isiTriger,$actionTiming,$eventManipulation,$tableName) {
+  function replaceTriger($id,$idRelease,$namaTriger,$isiTriger,$actionTiming,$eventManipulation,$tableName) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -904,11 +906,14 @@ class bandingDatabaseLocal extends baseObject{
     $passwordDatabase = $getDataServer['password_mysql'];
     $this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -D $databaseName  -s -e 'DROP TRIGGER $namaTriger' ");
     file_put_contents("/tmp/$namaTriger.trigger","DELIMITER ;; \n CREATE TRIGGER `$namaTriger` $actionTiming $eventManipulation ON `$tableName` FOR EACH ROW \n".$this->hexDecode($isiTriger).";;");
+    $this->pushFileSelected($id,"/tmp/$namaTriger.trigger");
     $command = "mysql -u".$usernameDatabase." -p".$passwordDatabase." -f -c $databaseName <  /tmp/$namaTriger.trigger";
     $this->sshCommand($sshConnection,$command);
     return $comand;
   }
-  function createRoutineFunction($id,$databaseName,$routineName,$routineValue,$routineParameters) {
+  function createRoutineFunction($id,$idRelease,$routineName,$routineValue,$routineParameters) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -924,11 +929,14 @@ class bandingDatabaseLocal extends baseObject{
       }
     }
     file_put_contents("/tmp/$routineName.function","DELIMITER ;; \n CREATE FUNCTION `$routineName` (".implode(",",$arrayParameter).") $returnFunction \n".$this->hexDecode($routineValue).";;");
+    $this->pushFileSelected($id,"/tmp/$routineName.function");
     $command = "mysql -u".$usernameDatabase." -p".$passwordDatabase." -f -c $databaseName <  /tmp/$routineName.function";
     $this->sshCommand($sshConnection,$command);
     return $comand;
   }
-  function createRoutineStoreProcedur($id,$databaseName,$routineName,$routineValue,$routineParameters) {
+  function createRoutineStoreProcedur($id,$idRelease,$routineName,$routineValue,$routineParameters) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -940,11 +948,14 @@ class bandingDatabaseLocal extends baseObject{
         $arrayParameter[] =$decodeJSONParameter[$i]->parameterName." ".$decodeJSONParameter[$i]->typeData." ";
     }
     file_put_contents("/tmp/$routineName.procedure","DELIMITER ;; \n CREATE PROCEDURE `$routineName` (".implode(",",$arrayParameter).")  \n".$this->hexDecode($routineValue).";;");
+    $this->pushFileSelected($id,"/tmp/$routineName.procedure");
     $command = "mysql -u".$usernameDatabase." -p".$passwordDatabase." -f -c $databaseName <  /tmp/$routineName.procedure";
     $this->sshCommand($sshConnection,$command);
     return $comand;
   }
-  function addColumn($id,$databaseName,$tableName,$columnName,$typeData) {
+  function addColumn($id,$idRelease,$tableName,$columnName,$typeData) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -954,7 +965,9 @@ class bandingDatabaseLocal extends baseObject{
     $this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -s -e '$command;' ");
     return $command;
   }
-  function changeTypeData($id,$databaseName,$tableName,$columnName,$typeData) {
+  function changeTypeData($id,$idRelease,$tableName,$columnName,$typeData) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -964,7 +977,9 @@ class bandingDatabaseLocal extends baseObject{
     $this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -s -e '$command;' ");
     return $command;
   }
-  function listStrukturDatabaseTujuan($id,$databaseName,$tableName,$columnName) {
+  function listStrukturDatabaseTujuan($id,$idRelease,$tableName,$columnName) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -977,7 +992,9 @@ class bandingDatabaseLocal extends baseObject{
     $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -s -e 'select TABLE_NAME,COLUMN_NAME,COLUMN_TYPE from information_schema.COLUMNS where TABLE_SCHEMA= $stringDatabaseName and TABLE_NAME = $tableName and COLUMN_NAME = $columnName ;' | awk '$contentAWK'"));
     return "[".str_replace(" ","",$comand)."]";
   }
-  function listTrigerDatabaseTujuan($id,$databaseName,$trigerName) {
+  function listTrigerDatabaseTujuan($id,$idRelease,$trigerName) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -989,7 +1006,9 @@ class bandingDatabaseLocal extends baseObject{
     $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -D information_schema -s -e 'select TRIGGER_NAME,HEX(ACTION_STATEMENT),ACTION_TIMING,EVENT_MANIPULATION,EVENT_OBJECT_TABLE  from TRIGGERS where TRIGGER_SCHEMA=  $stringDatabaseName and TRIGGER_NAME = $trigerName  ;' | awk '$contentAWK'"));
     return "[".str_replace(" ","",$comand)."]";
   }
-  function listRoutineDatabaseTujuan($id,$databaseName,$routineName) {
+  function listRoutineDatabaseTujuan($id,$idRelease,$routineName) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -1001,7 +1020,9 @@ class bandingDatabaseLocal extends baseObject{
     $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -D information_schema -s -e 'select ROUTINE_NAME,HEX(ROUTINE_DEFINITION),ROUTINE_TYPE from ROUTINES where ROUTINE_SCHEMA = $stringDatabaseName and ROUTINE_NAME = $routineName  ;' | awk '$contentAWK'"));
     return "[".str_replace(" ","",$comand)."]";
   }
-  function listTriger($id,$databaseName) {
+  function listTriger($id,$idRelease) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -1012,7 +1033,9 @@ class bandingDatabaseLocal extends baseObject{
     $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -D information_schema -s -e 'select TRIGGER_NAME,HEX(ACTION_STATEMENT),ACTION_TIMING,EVENT_MANIPULATION,EVENT_OBJECT_TABLE  from TRIGGERS where TRIGGER_SCHEMA=  $stringDatabaseName;' | awk '$contentAWK'"));
     return "[".str_replace(" ","",$comand)."]";
   }
-  function listRoutine($id,$databaseName) {
+  function listRoutine($id,$idRelease) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -1023,7 +1046,9 @@ class bandingDatabaseLocal extends baseObject{
     $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"mysql -u".$usernameDatabase." -p".$passwordDatabase." -D information_schema -s -e 'select ROUTINE_NAME,HEX(ROUTINE_DEFINITION),ROUTINE_TYPE from ROUTINES where ROUTINE_SCHEMA = $stringDatabaseName;' | awk '$contentAWK'"));
     return "[".str_replace(" ","",$comand)."]";
   }
-  function listParameter($id,$databaseName,$routineName,$routineType) {
+  function listParameter($id,$idRelease,$routineName,$routineType) {
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $databaseName = $getDataRelease['nama_database'];
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
     $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
     $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
@@ -1045,7 +1070,7 @@ class bandingDatabaseLocal extends baseObject{
   }
 
 }
-$bandingDatabaseLocal = new bandingDatabaseLocal();
+$bandingDatabaseServer = new bandingDatabaseServer();
 
 
  ?>

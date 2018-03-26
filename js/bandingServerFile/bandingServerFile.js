@@ -243,7 +243,11 @@ var bandingServerFile = new baseObject2({
 							var cell6 = row.insertCell(5);
 							var idCheckbox = nomorUrut - 1;
 							cell1.innerHTML = nomorUrut;
-							cell2.innerHTML = "<input class='custom-checkbox' type='checkbox' id='bandingServerFile_cb"+ idCheckbox+"' name='bandingServerFile_cb[]' value='"+resp.content.namaFile+"' onchange='bandingServerFile.thisChecked('bandingServerFile_cb"+idCheckbox+"','bandingServerFile_jmlcek');'>";
+							if(resp.content.reason != ''){
+								cell2.innerHTML = "<input class='custom-checkbox' type='checkbox' id='bandingServerFile_cb"+ idCheckbox+"' name='bandingServerFile_cb[]' value='"+resp.content.namaFile+"' onchange='bandingServerFile.thisChecked('bandingServerFile_cb"+idCheckbox+"','bandingServerFile_jmlcek');'>";
+							}else{
+								cell2.innerHTML = "";
+							}
 							cell3.innerHTML = resp.content.namaFile;
 							cell4.innerHTML = resp.content.tanggalDiServer;
 							cell5.innerHTML = resp.content.status;

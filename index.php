@@ -294,6 +294,7 @@ if(!isset($_GET['action'])){
       $_SESSION['idUser'] = $getDataUser['id'];
       $_SESSION['nama'] = $getDataUser['nama'];
       $cek = "sukses";
+      $Config->sqlQuery("delete from json_file_check where username = '".$getDataUser['username']."'");
   }else{
       $err = "Login gagal";
   }
