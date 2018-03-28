@@ -290,6 +290,9 @@ var dashboard = new baseObject2({
         idServer: idServer,
 				optionStatistik :$("#optionStatistik"+idServer).val()
       },
+      error: function (request, status, error) {
+        dashboard.getInfoServer(idServer);
+      },
       url: this.url + "&API=getInfoServer",
       success: function(data) {
         var resp = eval("(" + data + ")");
@@ -302,6 +305,58 @@ var dashboard = new baseObject2({
         }
       }
     });
+  },
+  graphServerChanged: function(idServer) {
+		$("#tempatLoading").html(this.loadingPage("Mengambil Info Server"));
+		$("#modalLoading").modal({backdrop: 'static', keyboard: false});
+    $.ajax({
+      type: "POST",
+      data: {
+        idServer: idServer,
+				optionStatistik :$("#optionStatistik"+idServer).val(),
+				dateRange :$("#kurunWaktu"+idServer).val(),
+      },
+      error: function (request, status, error) {
+        dashboard.getInfoServer(idServer);
+      },
+      url: this.url + "&API=graphServerChanged",
+      success: function(data) {
+        var resp = eval("(" + data + ")");
+        if (resp.err == "") {
+					$("#closeModal").click();
+          $("#graphServer" + idServer).html(resp.cek);
+          dashboard.exec_body_scripts(resp.cek);
+        } else {
+          dashboard.errorAlert(resp.err);
+        }
+      }
+    });
+  },
+  optionsGraphChanged: function(idServer) {
+
+    $.ajax({
+      type: "POST",
+      data: {
+        idServer: idServer,
+				optionStatistik :$("#optionStatistik"+idServer).val()
+      },
+      error: function (request, status, error) {
+        dashboard.getInfoServer(idServer);
+      },
+      url: this.url + "&API=optionsGraphChanged",
+      success: function(data) {
+        var resp = eval("(" + data + ")");
+        if (resp.err == "") {
+          $("#spanKurunWaktu" + idServer).html(resp.content);
+          dashboard.exec_body_scripts(resp.content);
+        } else {
+          dashboard.errorAlert(resp.err);
+        }
+      }
+    });
+  },
+  showGraph: function(idServer) {
+      dashboard.graphServerChanged(idServer);
   },
 
   exec_body_scripts: function(text) {

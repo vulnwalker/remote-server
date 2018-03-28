@@ -74,6 +74,11 @@ switch ($pages) {
     include "pages/bandingDatabaseServer/bandingDatabaseServer.php";
     break;
   }
+  case 'bugReport':{
+    checkLogin();
+    include "pages/bugReport/bugReport.php";
+    break;
+  }
   case 'logout':{
     $_SESSION['username'] = '';
     unset($_SESSION['username']);

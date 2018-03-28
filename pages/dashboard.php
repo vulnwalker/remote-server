@@ -53,6 +53,27 @@ class dashboard extends baseObject{
                         );
   		break;
   		}
+      case 'graphServerChanged':{
+        $cek = $this->loadScript().$this->statistikServer($idServer,$optionStatistik,$dateRange);
+  		break;
+  		}
+      case 'optionsGraphChanged':{
+        $dateRange = "<input type='text' name='kurunWaktu$idServer' id='kurunWaktu$idServer' placeholder='Filter Tanggal' class='float-left mrg10R form-control hasDatepicker' >";
+        $loadScript = "<script type='text/javascript' src='assets/widgets/daterangepicker/daterangepicker.js'></script>
+        <script type='text/javascript' src='assets/widgets/daterangepicker/moment.js'></script>
+        <script type='text/javascript'>
+            $('#kurunWaktu$idServer').daterangepicker({
+                format: 'DD-MM-YYYY'
+            });
+        </script>
+        ";
+        if($optionStatistik =='hari ini'){
+          $loadScript == "";
+          $dateRange = "<input type='text' name='kurunWaktu$idServer' id='kurunWaktu$idServer' placeholder='Filter Tanggal' class='float-left mrg10R form-control hasDatepicker' disabled >";
+        }
+        $content = $loadScript.$dateRange;
+  		break;
+  		}
       case 'rebootServer':{
         $this->rebootServer($id);
   		break;
@@ -119,7 +140,7 @@ class dashboard extends baseObject{
               $this->sqlQuery($query);
            }
            $arrayOptions = array(
-             array('quarter','15 MENIT'),
+             array('hari ini','HARI INI'),
              array('harian','HARIAN'),
              array('mingguan','MINGGUAN'),
              array('bulanan','BULANAN'),
@@ -172,10 +193,15 @@ class dashboard extends baseObject{
        						'value'=>$this->switchOption("webStatus$id",$getInfoServer['web_status'],"onchange=$this->Prefix.webStatusChanged($id)"),
        						 ),
              'optionStatistik' => array(
-                   'label'=>"Option",
+                   'label'=>"Graph Server",
                    'labelWidth'=>3,
-                   'value'=> $this->cmbArray("optionStatistik$id",$optionStatistik,$arrayOptions,"-- OPTION --","class='form-control' onchange=$this->Prefix.getInfoServer($id) ")
+                   'value'=> $this->cmbArray("optionStatistik$id",$optionStatistik,$arrayOptions,"-- OPTION --","class='form-control' onchange=$this->Prefix.optionsGraphChanged($id);  ")
                     ),
+            'filterTanggal' => array(
+      						'label'=>"Filter Tanggal",
+      						'labelWidth'=>3,
+                  'value'=> "<span id='spanKurunWaktu$id'> <input type='text' name='kurunWaktu$id' id='kurunWaktu$id' placeholder='Filter Tanggal' class='float-left mrg10R form-control hasDatepicker' > </span>"
+      						 ),
        			);
 
            $cek = "
@@ -189,7 +215,9 @@ class dashboard extends baseObject{
                    <div class='content-box-wrapper'>
                      ".$this->formGenerator($formFields)."
                      ".$this->loadScript($formFields)."
-                     ".$this->statistikServer($idServer,$optionStatistik)."
+                     <div id='graphServer$id'>
+                      ".$this->statistikServer($idServer,$optionStatistik)."
+                     </div>
                    </div>
                </div>
            ";
@@ -225,10 +253,16 @@ class dashboard extends baseObject{
     <script src='plugins/contextMenu/contextMenu.min.js'></script>
     <link rel='stylesheet' type='text/css' href='plugins/contextMenu/contextMenu.min.css'>
     <script type='text/javascript' src='assets/widgets/input-switch/inputswitch.js'></script>
+    <script type='text/javascript' src='assets/widgets/daterangepicker/daterangepicker.js'></script>
+    <script type='text/javascript' src='assets/widgets/daterangepicker/moment.js'></script>
     <script type='text/javascript'>
       $( document ).ready(function() {
         $('.input-switch').bootstrapSwitch();
+        // $('.hasDatepicker').daterangepicker({
+        //     format: 'DD-MM-YYYY'
+        // });
       });
+
 
     </script>
     <script type='text/javascript' src='assets/widgets/charts/flot/flot.js'></script>
@@ -388,9 +422,8 @@ class dashboard extends baseObject{
           $arrayFileSystem[] = array($arrayDisk[$i]->FileSystem,$arrayDisk[$i]->FileSystem." | ".$arrayDisk[$i]->Size);
       }
       $arrayOptions = array(
-        array('quarter','15 MENIT'),
+        array('hari ini','HARI INI'),
         array('harian','HARIAN'),
-        array('mingguan','MINGGUAN'),
         array('bulanan','BULANAN'),
       );
       $comboDisk = $this->cmbArray("fileSystem",$fileSystem,$arrayFileSystem,"-- File System --","class='form-control' ");
@@ -441,9 +474,14 @@ class dashboard extends baseObject{
   						'value'=>$this->switchOption("webStatus$id",$getInfoServer['web_status'],"onchange$this->Prefix.webStatusChanged($id,this.checked) "),
   						 ),
   			'optionStatistik' => array(
-  						'label'=>"Option",
+  						'label'=>"Graph Server",
   						'labelWidth'=>3,
-  						'value'=> $this->cmbArray("optionStatistik$id",$optionStatistik,$arrayOptions,"-- OPTION --","class='form-control' onchange=$this->Prefix.getInfoServer($id) ")
+  						'value'=> $this->cmbArray("optionStatistik$id",$optionStatistik,$arrayOptions,"-- OPTION --","class='form-control'  onchange=$this->Prefix.optionsGraphChanged($id); ")
+  						 ),
+  			'filterTanggal' => array(
+  						'label'=>"Filter Tanggal",
+  						'labelWidth'=>3,
+  						'value'=> "<span id='spanKurunWaktu$id'> <input type='text' name='kurunWaktu$id' id='kurunWaktu$id' placeholder='Filter Tanggal' class='float-left mrg10R form-control hasDatepicker' disabled > </span>"
   						 ),
   			);
       $content .= "
@@ -457,38 +495,55 @@ class dashboard extends baseObject{
 
               <div class='content-box-wrapper'>
                 ".$this->formGenerator($formFields)."
-
-                ".$this->statistikServer($id,"quarter")."
+                <div id='graphServer$id'>
+                  ".$this->statistikServer($id,"hari ini")."
+                </div>
               </div>
           </div>
       </div>";
     }
     return $content;
   }
-  function statistikServer($idServer,$option){
+  function statistikServer($idServer,$option,$dateRange){
     $nomorUrut = 0;
-    if($option == 'quarter'){
-      $getLogServer = $this->sqlQuery("select * from log_server where id_server = '$idServer'  ");
+    if($option == 'hari ini'){
+      $getLogServer = $this->sqlQuery("select *,LEFT(jam,2) from log_server where id_server = '$idServer' and tanggal = '".date("Y-m-d")."' group by LEFT(jam,2)");
       while ($dataLogServer = $this->sqlArray($getLogServer)) {
-          $decodedLog = json_decode($dataLogServer['result']);
-          $memoryUsage = str_replace("%","",$decodedLog->memoryUsage);
-          $cpuUsage = str_replace("%","",$decodedLog->cpuUsage);
-          $diskUsage = str_replace("%","",$decodedLog->diskUsage);
-          $tanggalLog = $dataLogServer['tanggal']." ".$dataLogServer['jam'];
+          $getDataJam = $this->sqlQuery("select * from log_server where id_server = '$idServer' and tanggal = '".$dataLogServer['tanggal']."' and LEFT(jam,2) = '".$dataLogServer['LEFT(jam,2)']."'");
+          $sumMemoryDataJam = '';
+          $sumCpuDataJam = '';
+          $sumDiskDataJam = '';
+          while ($dataJam = $this->sqlArray($getDataJam)) {
+            $decodedLog = json_decode($dataJam['result']);
+            $sumMemoryDataJam += str_replace("%","",$decodedLog->memoryUsage);
+            $sumCpuDataJam += str_replace("%","",$decodedLog->cpuUsage);
+            $sumDiskDataJam += str_replace("%","",$decodedLog->diskUsage);
+          }
+          $jumlahDataJam = $this->sqlRowCount($getDataJam);
+          $cpuUsage = ($sumCpuDataJam / $jumlahDataJam);
+          $memoryUsage = ($sumMemoryDataJam / $jumlahDataJam);
+          $diskUsage = ($sumDiskDataJam / $jumlahDataJam);
+          $tanggalLog = $dataLogServer['tanggal'];
           $pushArrayStatistik .= "
           memoryUsage.push([$nomorUrut, $memoryUsage]);
           cpuUsage.push([$nomorUrut, $cpuUsage]);
           diskUsage.push([$nomorUrut, $diskUsage]);
-          tanggalMemoryUsage.push(['$tanggalLog']);
-          tanggalCpuUsage.push(['$tanggalLog']);
-          tanggalDiskUsage.push(['$tanggalLog']);
+          tanggalMemoryUsage.push(['$tanggalLog | JAM ".$dataLogServer['LEFT(jam,2)']."']);
+          tanggalCpuUsage.push(['$tanggalLog | JAM ".$dataLogServer['LEFT(jam,2)']."']);
+          tanggalDiskUsage.push(['$tanggalLog | JAM ".$dataLogServer['LEFT(jam,2)']."']);
           ";
+          $arrayListJam[] = "[$nomorUrut,'".$dataLogServer['LEFT(jam,2)'].":00']";
           $nomorUrut +=1;
       }
+      $listJam = implode(",",$arrayListJam);
+      $kamusData = "
+                    xaxis: {
+                      ticks: [$listJam]
+                    },";
       $content = "<div class='panel'>
                   <div class='panel-body'>
                       <h3 class='title-hero'>
-                      Graph Server Condition
+                      Graph Server Condition &nbsp<input class='btn btn-primary' type='button' value='Show Graph' onclick=$this->Prefix.showGraph($idServer) >
                       </h3>
                       <div class='example-box-wrapper'>
                           <div id='grapikServer$idServer' class='mrg20B' style='width: 100%; height: 300px; padding: 0px; position: relative;'>
@@ -527,20 +582,13 @@ class dashboard extends baseObject{
                               backgroundColor: '#fff'
                           },
                           yaxis: { tickColor: 'rgba(0, 0, 0, 0.06)',  min : 0, max : 100, font: {color: 'rgba(0, 0, 0, 0.4)'}},
-                          xaxis: { tickColor: 'rgba(0, 0, 0, 0.06)',  font: {color: 'rgba(0, 0, 0, 0.4)'}},
+                          $kamusData
                           colors: [getUIColor('default'), getUIColor('gray'), getUIColor('blue')],
                           tooltip: true,
-                          // tooltipOpts: {
-                          //     content: 'Tanggal: %x, Jam: %y'
-                          // }
                       });
 
                   $('#grapikServer$idServer').bind('plotclick', function (event, pos, item) {
-                      if (item) {
-                        //  alert('You clicked point ' + item.dataIndex + ' in ' + item.series.label +' '+item.series.Tanggal[item.dataIndex] +'.');
-                        //  $('#clickdata').text('You clicked point ' + item.dataIndex + ' in ' + item.series.label +' '+item.datapoint[3] +'.');
-                        //  plot.highlight(item.series, item.datapoint);
-                      }
+
                   });
 
 
@@ -550,8 +598,8 @@ class dashboard extends baseObject{
 
               ";
     }elseif($option == 'harian'){
-      $date = new DateTime('7 days ago');
-      $getLogServer = $this->sqlQuery("select * from log_server where id_server = '$idServer' and tanggal < '".date("Y-m-d")."' and tanggal >= '".$date->format("Y-m-d")."' group by tanggal ");
+      $arrayRangeDate = explode(" - ",$dateRange);
+      $getLogServer = $this->sqlQuery("select * from log_server where id_server = '$idServer' and tanggal <= '".$this->generateDate($arrayRangeDate[1])."' and tanggal >= '".$this->generateDate($arrayRangeDate[0])."' group by tanggal ");
       while ($dataLogServer = $this->sqlArray($getLogServer)) {
           $getDataHarian = $this->sqlQuery("select * from log_server where id_server = '$idServer' and tanggal = '".$dataLogServer['tanggal']."'");
           $sumMemoryDataHarian = '';
@@ -564,8 +612,8 @@ class dashboard extends baseObject{
             $sumDiskDataHarian += str_replace("%","",$decodedLog->diskUsage);
           }
           $jumlahDataHarian = $this->sqlRowCount($getDataHarian);
-          $cpuUsage = $sumMemoryDataHarian / $jumlahDataHarian;
-          $memoryUsage = $sumCpuDataHarian / $jumlahDataHarian;
+          $cpuUsage =  $sumCpuDataHarian / $jumlahDataHarian;
+          $memoryUsage = $sumMemoryDataHarian / $jumlahDataHarian;
           $diskUsage = $sumDiskDataHarian / $jumlahDataHarian;
           $tanggalLog = $dataLogServer['tanggal'];
           $pushArrayStatistik .= "
@@ -576,50 +624,58 @@ class dashboard extends baseObject{
           tanggalCpuUsage.push(['$tanggalLog']);
           tanggalDiskUsage.push(['$tanggalLog']);
           ";
+          if($nomorUrut % 2 == 0){
+            $arrayListTanggal[] = "[$nomorUrut,'".$this->generateDate($dataLogServer['tanggal'])."']";
+          }
           $nomorUrut +=1;
       }
-      $codeDay = date('w') - 1;
-      if($codeDay == 0 ){
-        $kamusData = "
-              xaxis: {
-                ticks: [[0,'Senin'],[1,'Selasa'],[2,'Rabu'],[3,'Kamis'],[4,'Jumat'],[5,'Sabtu'],[6,'Minggu']]
-              },";
-      }elseif($codeDay == 1){
-        $kamusData = "
-              xaxis: {
-                ticks: [[0,'Selasa'],[1,'Rabu'],[2,'Kamis'],[3,'Jumat'],[4,'Sabtu'],[5,'Minggu'],[6,'Senin']]
-              },";
-      }elseif($codeDay == 2){
-        $kamusData = "
-              xaxis: {
-                ticks: [[0,'Rabu'],[1,'Kamis'],[2,'Jumat'],[3,'Sabtu'],[4,'Minggu'],[5,'Senin'],[6,'Selasa']]
-              },";
-      }elseif($codeDay == 3){
-        $kamusData = "
-              xaxis: {
-                ticks: [[0,'Kamis'],[1,'Jumat'],[2,'Sabtu'],[3,'Minggu'],[4,'Senin'],[5,'Selasa'],[6,'Rabu']]
-              },";
-      }elseif($codeDay == 4){
-        $kamusData = "
-              xaxis: {
-                ticks: [[0,'Jumat'],[1,'Sabtu'],[2,'Minggu'],[3,'Senin'],[4,'Selasa'],[5,'Rabu'],[6,'Kamis']]
-              },";
-      }elseif($codeDay == 5){
-        $kamusData = "
-              xaxis: {
-                ticks: [[0,'Sabtu'],[1,'Minggu'],[2,'Senin'],[3,'Selasa'],[4,'Rabu'],[5,'Kamis'],[6,'Jumat']]
-              },";
-      }elseif($codeDay == -1){
-        $kamusData = "
-              xaxis: {
-                ticks: [[0,'Minggu'],[1,'Senin'],[2,'Selasa'],[3,'Rabu'],[4,'Kamis'],[5,'Jumat'],[6,'Sabtu']]
-              },";
-      }
+      // $codeDay = date('w') - 1;
+      // if($codeDay == 0 ){
+      //   $kamusData = "
+      //         xaxis: {
+      //           ticks: [[0,'Senin'],[1,'Selasa'],[2,'Rabu'],[3,'Kamis'],[4,'Jumat'],[5,'Sabtu'],[6,'Minggu']]
+      //         },";
+      // }elseif($codeDay == 1){
+      //   $kamusData = "
+      //         xaxis: {
+      //           ticks: [[0,'Selasa'],[1,'Rabu'],[2,'Kamis'],[3,'Jumat'],[4,'Sabtu'],[5,'Minggu'],[6,'Senin']]
+      //         },";
+      // }elseif($codeDay == 2){
+      //   $kamusData = "
+      //         xaxis: {
+      //           ticks: [[0,'Rabu'],[1,'Kamis'],[2,'Jumat'],[3,'Sabtu'],[4,'Minggu'],[5,'Senin'],[6,'Selasa']]
+      //         },";
+      // }elseif($codeDay == 3){
+      //   $kamusData = "
+      //         xaxis: {
+      //           ticks: [[0,'Kamis'],[1,'Jumat'],[2,'Sabtu'],[3,'Minggu'],[4,'Senin'],[5,'Selasa'],[6,'Rabu']]
+      //         },";
+      // }elseif($codeDay == 4){
+      //   $kamusData = "
+      //         xaxis: {
+      //           ticks: [[0,'Jumat'],[1,'Sabtu'],[2,'Minggu'],[3,'Senin'],[4,'Selasa'],[5,'Rabu'],[6,'Kamis']]
+      //         },";
+      // }elseif($codeDay == 5){
+      //   $kamusData = "
+      //         xaxis: {
+      //           ticks: [[0,'Sabtu'],[1,'Minggu'],[2,'Senin'],[3,'Selasa'],[4,'Rabu'],[5,'Kamis'],[6,'Jumat']]
+      //         },";
+      // }elseif($codeDay == -1){
+      //   $kamusData = "
+      //         xaxis: {
+      //           ticks: [[0,'Minggu'],[1,'Senin'],[2,'Selasa'],[3,'Rabu'],[4,'Kamis'],[5,'Jumat'],[6,'Sabtu']]
+      //         },";
+      // }
+      $listTanggal = implode(",",$arrayListTanggal);
+      $kamusData = "
+                    xaxis: {
+                      ticks: [$listTanggal]
+                    },";
 
       $content = "<div class='panel'>
                   <div class='panel-body'>
                       <h3 class='title-hero'>
-                      Graph Server Condition
+                      Graph Server Condition &nbsp<input class='btn btn-primary' type='button' value='Show Graph' onclick=$this->Prefix.showGraph($idServer) >
                       </h3>
                       <div class='example-box-wrapper'>
                           <div id='grapikServer$idServer' class='mrg20B' style='width: 100%; height: 300px; padding: 0px; position: relative;'>
@@ -662,17 +718,11 @@ class dashboard extends baseObject{
 
                           colors: [getUIColor('default'), getUIColor('gray'), getUIColor('blue')],
                           tooltip: true,
-                          // tooltipOpts: {
-                          //     content: 'Tanggal: %x, Jam: %y'
-                          // }
+
                       });
 
                   $('#grapikServer$idServer').bind('plotclick', function (event, pos, item) {
-                      if (item) {
-                        //  alert('You clicked point ' + item.dataIndex + ' in ' + item.series.label +' '+item.series.Tanggal[item.dataIndex] +'.');
-                        //  $('#clickdata').text('You clicked point ' + item.dataIndex + ' in ' + item.series.label +' '+item.datapoint[3] +'.');
-                        //  plot.highlight(item.series, item.datapoint);
-                      }
+
                   });
 
 
