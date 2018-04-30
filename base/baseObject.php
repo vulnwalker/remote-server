@@ -652,6 +652,27 @@ class baseObject extends Config{
     return $html;
   }
 
+  function checkBox($id,$value,$checked,$text){
+    // $arrayWarna = array(
+    //                 array('blue','info'),
+    //                 array('green','success'),
+    //                 array('red','danger'),
+    //               );
+    // for($i=0;$i<count($arrayWarna);$i++) {
+    //   $Sel = $warna==$arrayWarna[$i][0]?"".$arrayWarna[$i][1]."":"";
+    // }
+    $html = "
+    <div class='col-md-3'>
+        <div class='checkbox checkbox-info'>
+            <label style='padding-left:0px;'>
+                <div class='checker' id='uniform-inlineCheckbox114'><span class=''><input type='checkbox' id='$id' name='$id'  $checked class='custom-checkbox'>
+                <i class='glyph-icon icon-check'></i></span></div>$text
+            </label>
+        </div>
+    </div>";
+    return $html;
+  }
+
 
 }
 

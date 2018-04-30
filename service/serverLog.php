@@ -44,7 +44,7 @@ class serverLog extends Config{
     $diskUsg = '"%s"';
     $varNF = "$"."NF";
     $bagi = '"/"';
-    return $this->sshCommand($sshConnection,"df -h | awk '$varNF==$bagi{printf $diskUsg, $5}'");
+    return strstr($this->sshCommand($sshConnection,"df -h | awk '$varNF==$bagi{printf $diskUsg, $5}'"), '%', true);
   }
   function getInfoServer($idServer){
     $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$idServer'"));

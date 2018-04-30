@@ -315,6 +315,9 @@ var dashboard = new baseObject2({
         idServer: idServer,
 				optionStatistik :$("#optionStatistik"+idServer).val(),
 				dateRange :$("#kurunWaktu"+idServer).val(),
+        checkBoxMemoryUsage : $("#checkBoxMemoryUsage"+idServer+":checked").val(),
+        checkBoxCpuUsage : $("#checkBoxCpuUsage"+idServer+":checked").val(),
+        checkBoxDiskUsage : $("#checkBoxDiskUsage"+idServer+":checked").val(),
       },
       error: function (request, status, error) {
         dashboard.getInfoServer(idServer);

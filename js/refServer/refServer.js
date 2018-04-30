@@ -66,7 +66,9 @@ var refServer = new baseObject2({
 		return (((sign)?'':'-') + '' + num + ',' + cents);
 	},
 	setValueFilter: function(a){
-		$("#filterCari").val(a.value);
+		// $("#filterCari").val(a.value);
+		var table = $('#dataServer').DataTable();
+		table.search($(a).val()).draw() ;
 	},
 	refreshList: function(){
 		$.ajax({

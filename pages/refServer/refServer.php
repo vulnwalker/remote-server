@@ -155,10 +155,32 @@ class refServer extends baseObject{
   }
   function loadScript(){
     return "
+    <style>
+      .dataTables_filter{
+        display:none;
+      }
+    </style>
+    <link rel='stylesheet' type='text/css' href='assets/widgets/datatable/datatable.css'>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable.js'></script>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable-bootstrap.js'></script>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable-tabletools.js'></script>
     <script type='text/javascript' src='js/refServer/refServer.js'></script>
+    <script type='text/javascript'>
+    $(document).ready(function() {
+        var table = $('#dataServer').DataTable();
+        $('#dataServer tbody').on( 'click', 'tr', function () {
+            $(this).toggleClass('tr-selected');
+        } );
+        $('#dataTables_filter').attr('style','display:none;');
+    });
+    // $(document).ready(function() {
+    //     $('.dataTables_filter input').attr('placeholder', 'Search...');
+    // });
+
+    </script>
     ";
   }
-  
+
   function setMenuEdit(){
     $setMenuEdit = "
     <div id='header-nav-right'>
@@ -169,7 +191,7 @@ class refServer extends baseObject{
       <div class='pad5A '>
           <div class='input-group'>
               <input type='text' class='form-control' id='filterCari' name='filterCari' onkeyup=$this->Prefix.setValueFilter(this) placeholder='Cari data'>
-              <span class='input-group-btn' onclick=$this->Prefix.refreshList();>
+              <span class='input-group-btn' onclick=$this->Prefix.setValueFilter(document.getElementById('filterCari'));>
                   <a class='btn btn-primary' >Cari</a>
               </span>
           </div>
@@ -215,17 +237,17 @@ class refServer extends baseObject{
     $kolomHeader = "
     <thead>
       <tr>
-          <th>No</th>
-          <th style='text-align:center;'>".$this->checkAll(25,$this->Prefix)."</th>
-          <th>Nama Server</th>
-          <th>Alias</th>
-          <th>Alamat IP</th>
-          <th>User FTP</th>
-          <th>Password FTP</th>
-          <th>Port FTP</th>
-          <th>User Mysql</th>
-          <th>Password Mysql</th>
-          <th>Port Mysql</th>
+          <th style='width:20px !important;'>No</th>
+          <th width='20' style='text-align:center;'>".$this->checkAll(25,$this->Prefix)."</th>
+          <th width='200'>Nama Server</th>
+          <th width='100'>Alias</th>
+          <th width='100'>Alamat IP</th>
+          <th width='100'>User FTP</th>
+          <th width='100'>Password FTP</th>
+          <th width='100'>Port FTP</th>
+          <th width='100'>User Mysql</th>
+          <th width='100'>Password Mysql</th>
+          <th width='100'>Port Mysql</th>
       </tr>
     </thead>";
     return $kolomHeader;
@@ -267,7 +289,7 @@ class refServer extends baseObject{
     }
     $htmlTable = "
       <form name='$this->formName' id='$this->formName'>
-        <table class='table table-bordered table-striped table-condensed table-hover'>
+        <table class='table table-striped table-bordered dataTable' cellspacing='0' width='100%' role='grid' aria-describedby='dataServer_info' style='width: 100%;font-size:12px;' id='dataServer'>
             ".$this->setKolomHeader()."
             <tbody>
               $kolomData

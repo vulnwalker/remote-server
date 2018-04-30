@@ -229,17 +229,17 @@ class bugReport extends baseObject{
     $kolomHeader = "
     <thead>
       <tr>
-          <th>No</th>
-          <th style='text-align:center;'>".$this->checkAll(25,$this->Prefix)."</th>
-          <th>Nama Server</th>
-          <th>Alias</th>
-          <th>Alamat IP</th>
-          <th>User FTP</th>
-          <th>Password FTP</th>
-          <th>Port FTP</th>
-          <th>User Mysql</th>
-          <th>Password Mysql</th>
-          <th>Port Mysql</th>
+          <th style='width:20px !important;'>No</th>
+          <th width='20' style='text-align:center;'>".$this->checkAll(25,$this->Prefix)."</th>
+          <th width='200'>Nama Server</th>
+          <th width='100'>Alias</th>
+          <th width='100'>Alamat IP</th>
+          <th width='100'>User FTP</th>
+          <th width='100'>Password FTP</th>
+          <th width='100'>Port FTP</th>
+          <th width='100'>User Mysql</th>
+          <th width='100'>Password Mysql</th>
+          <th width='100'>Port Mysql</th>
       </tr>
     </thead>";
     return $kolomHeader;
@@ -257,16 +257,16 @@ class bugReport extends baseObject{
     }
     $tableRow = "
     <tr class='$classRow'>
-        <td>$no</td>
+        <td  style='text-align:center;'>$no</td>
         <td style='text-align:center;'>".$this->setCekBox($no - 1,$id,$this->Prefix)."</td>
-        <td>$nama_server</td>
+        <td >$nama_server</td>
         <td>$alias</td>
         <td>$alamat_ip</td>
         <td>$user_ftp</td>
         <td>$password_ftp</td>
         <td>$port_ftp</td>
         <td>$user_mysql</td>
-        <td>$password_mysql</td>
+        <td'>$password_mysql</td>
         <td>$port_mysql</td>
     </tr>
     ";
@@ -281,6 +281,7 @@ class bugReport extends baseObject{
       }
     $htmlTable = "
       <form name='$this->formName' id='$this->formName'>
+
         $kolomData
         <input type='hidden' name='".$this->Prefix."_jmlcek' id='".$this->Prefix."_jmlcek' value='0'>
       </form>

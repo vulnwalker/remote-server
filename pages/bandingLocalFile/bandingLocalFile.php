@@ -35,11 +35,21 @@ class bandingLocalFile extends baseObject{
           for ($i=0; $i < sizeof($decodeJsonFile) ; $i++) {
             $dateModified = $this->dateConversion($decodeJsonFile[$i]->tanggal);
             if ($this->filterExtension($decodeJsonFile[$i]->file) == 0) {
-              $arrayFile[] = array(
-                      'file' => $decodeJsonFile[$i]->file,
-                      'tanggal' => $decodeJsonFile[$i]->tanggal,
-                      'size' => $decodeJsonFile[$i]->size,
-              );
+              if(!empty($filterFolder)){
+                  if($this->unFilterExtension($decodeJsonFile[$i]->file,$filterFolder) != 0){
+                      $arrayFile[] = array(
+                              'file' => $decodeJsonFile[$i]->file,
+                              'tanggal' => $decodeJsonFile[$i]->tanggal,
+                              'size' => $decodeJsonFile[$i]->size,
+                      );
+                  }
+              }else{
+                $arrayFile[] = array(
+                        'file' => $decodeJsonFile[$i]->file,
+                        'tanggal' => $decodeJsonFile[$i]->tanggal,
+                        'size' => $decodeJsonFile[$i]->size,
+                );
+              }
             }
           }
           $jsonFileFilter = json_encode($arrayFile);
@@ -64,11 +74,21 @@ class bandingLocalFile extends baseObject{
           for ($i=0; $i < sizeof($decodeJsonFile) ; $i++) {
             $dateModified = $this->dateConversion($decodeJsonFile[$i]->tanggal);
             if($this->dateToNumber($dateModified) <= $tanggalSelesai &&  $this->dateToNumber($dateModified) >= $tanggalMulai && $this->filterExtension($decodeJsonFile[$i]->file) == 0){
+              if(!empty($filterFolder)){
+                  if($this->unFilterExtension($decodeJsonFile[$i]->file,$filterFolder) != 0){
+                      $arrayFile[] = array(
+                              'file' => $decodeJsonFile[$i]->file,
+                              'tanggal' => $decodeJsonFile[$i]->tanggal,
+                              'size' => $decodeJsonFile[$i]->size,
+                      );
+                  }
+              }else{
                 $arrayFile[] = array(
                         'file' => $decodeJsonFile[$i]->file,
                         'tanggal' => $decodeJsonFile[$i]->tanggal,
                         'size' => $decodeJsonFile[$i]->size,
                 );
+              }
 
             }
           }
@@ -99,17 +119,34 @@ class bandingLocalFile extends baseObject{
           for ($i=0; $i < sizeof($decodeJsonFile) ; $i++) {
             $dateModified = $this->dateConversion($decodeJsonFile[$i]->tanggal);
             if($this->filterExtension($decodeJsonFile[$i]->file) == 0){
-              $tableResult .= "
-                <tr>
-                  <td>$nomorUrut</td>
-                  <td></td>
-                  <td>".$decodeJsonFile[$i]->file."</td>
-                  <td></td>
-                  <td></td>
-                </tr>
+              if(!empty($filterFolder)){
+                  if($this->unFilterExtension($decodeJsonFile[$i]->file,$filterFolder) != 0){
+                    $tableResult .= "
+                      <tr>
+                        <td>$nomorUrut</td>
+                        <td></td>
+                        <td>".$decodeJsonFile[$i]->file."</td>
+                        <td></td>
+                        <td></td>
+                      </tr>
 
-                ";
-                $nomorUrut += 1;
+                      ";
+                      $nomorUrut += 1;
+                  }
+              }else{
+                $tableResult .= "
+                  <tr>
+                    <td>$nomorUrut</td>
+                    <td></td>
+                    <td>".$decodeJsonFile[$i]->file."</td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+
+                  ";
+                  $nomorUrut += 1;
+              }
+
             }
           }
           $jsonFileFilter = json_encode($arrayFile);
@@ -124,17 +161,33 @@ class bandingLocalFile extends baseObject{
           for ($i=0; $i < sizeof($decodeJsonFile) ; $i++) {
             $dateModified = $this->dateConversion($decodeJsonFile[$i]->tanggal);
             if($this->dateToNumber($dateModified) <= $tanggalSelesai &&  $this->dateToNumber($dateModified) >= $tanggalMulai && $this->filterExtension($decodeJsonFile[$i]->file) == 0  ){
-              $tableResult .= "
-                <tr>
-                  <td>$nomorUrut</td>
-                  <td></td>
-                  <td>".$decodeJsonFile[$i]->file."</td>
-                  <td></td>
-                  <td></td>
-                </tr>
+              if(!empty($filterFolder)){
+                  if($this->unFilterExtension($decodeJsonFile[$i]->file,$filterFolder) != 0){
+                    $tableResult .= "
+                      <tr>
+                        <td>$nomorUrut</td>
+                        <td></td>
+                        <td>".$decodeJsonFile[$i]->file."</td>
+                        <td></td>
+                        <td></td>
+                      </tr>
 
-                ";
-                $nomorUrut += 1;
+                      ";
+                      $nomorUrut += 1;
+                  }
+              }else{
+                $tableResult .= "
+                  <tr>
+                    <td>$nomorUrut</td>
+                    <td></td>
+                    <td>".$decodeJsonFile[$i]->file."</td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+
+                  ";
+                  $nomorUrut += 1;
+              }
             }
           }
           $jsonFileFilter = json_encode($arrayFile);
@@ -237,6 +290,20 @@ class bandingLocalFile extends baseObject{
       $result = 0;
       for ($i=0; $i < sizeof($this->blockListExtension); $i++) {
         if(strpos($word, $this->blockListExtension[$i][0]) !== false){
+          $result += 1;
+        }
+      }
+      return $result;
+  }
+  function unFilterExtension($word,$arrayAllowedExtension){
+      $arrayAllowedExtension = explode("\n",$arrayAllowedExtension);
+      $result = 0;
+      for ($i=0; $i < sizeof($arrayAllowedExtension); $i++) {
+        $filterWord = str_replace("\r","",$arrayAllowedExtension[$i]);
+        $filterWord = str_replace("//","/",$filterWord);
+        $filterWord = str_replace("\t","",$filterWord);
+        $filterWord = str_replace(" ","",$filterWord);
+        if(strpos($word, $filterWord) !== false){
           $result += 1;
         }
       }
@@ -367,6 +434,12 @@ class bandingLocalFile extends baseObject{
                     <label class='col-sm-1 control-label'>TARGET</label>
                     <div class='col-sm-11'>
                         $cmbTarget
+                    </div>
+                </div>
+                <div class='form-group'>
+                    <label class='col-sm-1 control-label'>FILTER WORD</label>
+                    <div class='col-sm-11'>
+                        <textarea id='filterFolder' name='filterFolder' class='form-control'></textarea>
                     </div>
                 </div>
                 <div class='form-group'>
