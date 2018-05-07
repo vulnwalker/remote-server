@@ -3,6 +3,22 @@ class refRelease extends baseObject{
   var $Prefix = "refRelease";
   var $formName = "refReleaseForm";
   var $tableName = "ref_release";
+  var $idServer = 1000;
+  var $username = "";
+  var $blockListExtension = array(
+      array('.bck'),
+      array(',bck'),
+      array('.BCK'),
+      array('.backup'),
+      array('.201'),
+      array('.php_'),
+      array('.php_'),
+      array('.bck'),
+      array('.git'),
+      array('_DOC'),
+      array('.doc'),
+      array('.xls'),
+  );
 
   function jsonGenerator(){
     $cek = ''; $err=''; $content=''; $json=TRUE;
@@ -51,27 +67,33 @@ class refRelease extends baseObject{
                       </div>
                       <div class='form-group'>
                         <div class='row'>
-                          <label class='col-sm-3 control-label' style='margin-top:6px;'>Sql File</label>
-                          <div class='col-sm-9'>
-                            <input type='text' class='form-control' value='".$getData['mysql_file']."' readonly>
-                          </div>
-                        </div>
-                      </div>
-                      <div class='form-group'>
-                        <div class='row'>
                           <label class='col-sm-3 control-label' style='margin-top:6px;'>Option</label>
-                          <div class='col-sm-2'>
-                            <input type='checkbox' name='optionCreateDatabase' id='optionCreateDatabase' value='optionCreateDatabase'> Create Database
+                          <div class='col-sm-3'>
+                            <input type='checkbox' name='optionExecuteSql' id='optionExecuteSql' value='databaseOnly'> Push Database ( KOSONGAN )
                           </div>
-                          <div class='col-sm-2'>
-                            <input type='checkbox' name='optionExecuteSql' id='optionExecuteSql' value='databaseOnly'> Execute Sql File
-                          </div>
-                          <div class='col-sm-2'>
+                          <div class='col-sm-3'>
                             <input type='checkbox' name='optionPushFile' id='optionPushFile' value='optionPushFile'> Push Files
                           </div>
                         </div>
                       </div>
+                      <div class='form-group' >
+                          <div class='col-sm-12' >
+                            <div class='progressbar' data-value='0' id='prosesBarValue'>
+                              <div class='progressbar-value bg-primary' id='prosesBarWarna' >
+                                <div class='progress-overlay'></div>
+                                <div class='progress-label' id='prosesBarText'>0%</div>
+                              </div>
+                            </div>
+                          </div>
+                      </div>
+                      <div class='form-group'>
+                        <div class='row'>
+                          <div class='col-sm-12'>
+                            <textarea class='form-control' id='logPush' readonly style='margin-top:10px;'></textarea>
+                          </div>
 
+                        </div>
+                      </div>
                     </div>
                     <div class='modal-footer'>
                         <input type='hidden' name='idRelease' id='idRelease' value='".$refRelease_cb[0]."'>
@@ -84,39 +106,137 @@ class refRelease extends baseObject{
         </div>";
   		break;
   		}
-      case 'pushRelease':{
-            $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '".$listServer[$urutanKe - 1]."'"));
+      case 'prosesPush':{
+            $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '".$listServer[$urutanServer - 1]."'"));
             $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
-            $databasePassword = $getDataServer["password_mysql"];
-            $userMysql = $getDataServer["user_mysql"];
-            $databaseName = $getDataRelease['nama_database'];
-            $sqlLocation = $getDataRelease['mysql_file'];
-            $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
-            $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
-            if(!empty($optionPushFile)){
-              $this->xSFTP($getDataRelease['directory_location'],$getDataRelease['directory_location'],$sshConnection);
+            $logPush .= $getDataServer['alias']." =>  ";
+            if($nomorUrut == 1){
+              if(!empty($optionExecuteSql)){
+                $databasePassword = $getDataServer["password_mysql"];
+                $userMysql = $getDataServer["user_mysql"];
+                $databaseName = $getDataRelease['nama_database'];
+                $sqlLocation = $getDataRelease['mysql_file'];
+                $getDataServerLocal = $this->sqlArray($this->sqlQuery("select * from  ref_server where id = '$this->idServer'"));
+                $sshConnectionLocal = $this->sshConnect($getDataServerLocal['alamat_ip'],$getDataServerLocal['port_ftp']);
+                $this->sshLogin($sshConnectionLocal,$getDataServerLocal['user_ftp'],$getDataServerLocal['password_ftp']);
+                $namaFileStruktur = "/tmp/".$databaseName.".struktur.sql";
+                $namaFileFunction = "/tmp/".$databaseName.".function.sql";
+                $this->sshCommand($sshConnectionLocal,"mysqldump -u ".$getDataServerLocal['user_mysql']." -p".$getDataServerLocal['password_mysql']." -f --no-data --skip-events --skip-routines --skip-triggers $databaseName > $namaFileStruktur");
+                $this->sshCommand($sshConnectionLocal,"mysqldump -u ".$getDataServerLocal['user_mysql']." -p".$getDataServerLocal['password_mysql']." -f --routines --triggers --no-create-info --no-data --no-create-db --skip-opt $databaseName > $namaFileFunction");
+                $this->pushFileSelected($getDataServer['id'],$namaFileStruktur);
+                $this->pushFileSelected($getDataServer['id'],$namaFileFunction);
+
+                $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
+                $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
+                $createDatabase = "mysql -u".$userMysql." -p".$databasePassword." -e 'CREATE DATABASE ".$databaseName." CHARACTER SET latin1 COLLATE latin1_general_ci '";
+                $this->sshCommand($sshConnection,$createDatabase);
+                $this->sshCommand($sshConnection,"mysql -u $userMysql -p$databasePassword -f -c $databaseName < $namaFileStruktur");
+                $this->sshCommand($sshConnection,"mysql -u $userMysql -p$databasePassword -f -c $databaseName < $namaFileFunction");
+                $cek = $createDatabase;
+                $logPush .= "CREATE DATABASE => $databaseName , ";
+              }
             }
-            if(!empty($optionCreateDatabase)){
-              $createDatabase = "mysql -u".$userMysql." -p".$databasePassword." -e 'CREATE DATABASE ".$databaseName." CHARACTER SET latin1 COLLATE latin1_general_ci '";
-              $this->sshCommand($sshConnection,$createDatabase);
+
+            if($nomorUrut == ($jumlahData + 1)){
+              $sukses = "OK";
+              $nextServer = "1";
+            }else{
+              if(!empty($optionPushFile)){
+                $getDataFileCheck = $this->sqlArray($this->sqlQuery("select * from json_file_check where id ='$idFileCheck'"));
+                $explodeListFile = json_decode($getDataFileCheck['isi']);
+                $fileLocation = $explodeListFile[$nomorUrut - 1]->file;
+                $logPush .= "push file => $fileLocation";
+                $this->pushFileSelected($getDataServer['id'],$namaFile);
+
+              }
+              if($nomorUrut == ($jumlahData)){
+                $sukses = "OK";
+                $nextServer = "1";
+              }
+              $persen = ($nomorUrut / $jumlahData) * 100;
+              $persenText = $persen."%";
+              $sukses = "";
             }
-            if(!empty($optionExecuteSql)){
-              $this->xSFTP($getDataRelease['mysql_file'],$getDataRelease['mysql_file'],$sshConnection);
-              $executeSqlFile = "mysql -u".$userMysql." -p".$databasePassword." $databaseName < $sqlLocation";
-              $this->sshCommand($sshConnection,$executeSqlFile);
+            if($urutanServer == sizeof($listServer)){
+              $sukses = "OK";
+              $nextServer = "0";
             }
-            if($urutanKe == sizeof($listServer)){
-              $status = "OK";
-            }
-            $cek = $executeSqlFile;
-            $content = array('urutanKe' => $urutanKe + 1, 'status' => $status);
+
+            $content = array(
+                        'urutanKe' => $urutanKe + 1,
+                        'nextServer' => $nextServer,
+                        "sukses" => $sukses,
+                        "persen" => $persen,
+                        "persenText" => $persenText,
+                        "error" => $cek,
+                        'namaFile' => $fileLocation,
+                        'fileLocation' => $fileLocation,
+                        'logPush' => $logPush
+                      );
   		break;
   		}
       case 'executeRelease':{
             if(sizeof($listServer) == 0){
               $err = "Pilih Server Tujuan";
             }
-            $content = array('urutanKe' =>  1);
+            if(empty($optionPushFile) &&  empty($optionExecuteSql)){
+              $err = "Centang Salah Satu";
+            }
+
+
+            if($err == ""){
+              if(!empty($optionPushFile)){
+                  $jsonFile = $this->listFileRelease($this->idServer,$idRelease);
+                  $decodeJsonFile = json_decode($jsonFile);
+                  $arrayFile = array();
+                  for ($i=0; $i < sizeof($decodeJsonFile) ; $i++) {
+                    $dateModified = $this->dateConversion($decodeJsonFile[$i]->tanggal);
+                    if($this->filterExtension($decodeJsonFile[$i]->file) == 0 ){
+                      if(!empty($filterFolder)){
+                          if($this->unFilterExtension($decodeJsonFile[$i]->file,$filterFolder) != 0){
+                              $arrayFile[] = array(
+                                      'file' => $decodeJsonFile[$i]->file,
+                                      'tanggal' => $decodeJsonFile[$i]->tanggal,
+                                      'size' => $decodeJsonFile[$i]->size,
+                              );
+                          }
+                      }else{
+                        $arrayFile[] = array(
+                                'file' => $decodeJsonFile[$i]->file,
+                                'tanggal' => $decodeJsonFile[$i]->tanggal,
+                                'size' => $decodeJsonFile[$i]->size,
+                        );
+                      }
+                    }
+                  }
+                  $jsonFileFilter = json_encode($arrayFile);
+                  $dataFileCheck = array(
+                    'isi' => $jsonFileFilter,
+                    'username' => $this->username,
+                    'tanggal' => date("Y-m-d"),
+                    'jam' => date("H:i"),
+                  );
+                  $this->sqlQuery($this->sqlInsert("json_file_check",$dataFileCheck));
+                  $getIdFileCheck = $this->sqlArray($this->sqlQuery("select max(id) from json_file_check where username = '$this->username'"));
+                  $decodeJSON = json_decode($jsonFileFilter);
+
+
+                  $content = array(
+                    "jumlahData" => sizeof($decodeJSON),
+                    "idFileCheck" => $getIdFileCheck['max(id)'],
+                    "idDataBaseCheck" => $getIdDataBaseCheck['max(id)'],
+                    'urutanKe' =>  1,
+                );
+              }else{
+                $content = array(
+                  "jumlahData" => 1,
+                  "idFileCheck" => 0,
+                  'urutanKe' =>  1,
+              );
+              }
+
+
+            }
   		break;
   		}
       case 'refreshList':{
@@ -219,17 +339,35 @@ class refRelease extends baseObject{
     <script type='text/javascript' src='js/refRelease/refRelease.js'></script>
     <script type='text/javascript' src='assets/widgets/datepicker/datepicker.js'></script>
     <script type='text/javascript' src='assets/widgets/multi-select/multiselect.js'></script>
-    <script>
-      $(document).ready(function() {
-            $('.bootstrap-datepicker').bsdatepicker({
-                format: 'dd-mm-yyyy'
-            });
+    <style>
+      .dataTables_filter{
+        display:none;
+      }
+    </style>
+    <link rel='stylesheet' type='text/css' href='assets/widgets/datatable/datatable.css'>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable.js'></script>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable-bootstrap.js'></script>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable-tabletools.js'></script>
+    <script type='text/javascript'>
+    $(document).ready(function() {
+      var table = $('#dataServer').DataTable({
+           lengthMenu: [
+               [ 1, 2, 4, 8, 16, 32, 64, 128, -1 ],
+               [ '1', '2', '4', '8', '16', '32', '64', '128', 'Show all' ]
+           ]
       });
+    $('#dataServer tbody').on( 'click', 'tr', function () {
+        $(this).toggleClass('tr-selected');
+    } );
+    $('#dataTables_filter').attr('style','display:none;');
+        $('.bootstrap-datepicker').bsdatepicker({
+            format: 'dd-mm-yyyy'
+        });
+    });
     </script>
-
     ";
   }
-  
+
   function setMenuEdit(){
     $setMenuEdit = "
     <div id='header-nav-right'>
@@ -240,7 +378,7 @@ class refRelease extends baseObject{
       <div class='pad5A '>
           <div class='input-group'>
               <input type='text' class='form-control' id='filterCari' name='filterCari' onkeyup=$this->Prefix.setValueFilter(this) placeholder='Cari data'>
-              <span class='input-group-btn' onclick=$this->Prefix.refreshList();>
+              <span class='input-group-btn' onclick=$this->Prefix.setValueFilter(document.getElementById('filterCari'));>
                   <a class='btn btn-primary' >Cari</a>
               </span>
           </div>
@@ -293,7 +431,6 @@ class refRelease extends baseObject{
           <th>Tanggal Release</th>
           <th>Directory Location</th>
           <th>Nama Database</th>
-          <th>SQL File</th>
           <th>Last Modified</th>
       </tr>
     </thead>";
@@ -318,7 +455,6 @@ class refRelease extends baseObject{
         <td>".$this->generateDate($tanggal_release)."</td>
         <td>$directory_location</td>
         <td>$nama_database</td>
-        <td>$mysql_file</td>
         <td>$last_modified</td>
     </tr>
     ";
@@ -333,7 +469,7 @@ class refRelease extends baseObject{
     }
     $htmlTable = "
       <form name='$this->formName' id='$this->formName'>
-        <table class='table table-bordered table-striped table-condensed table-hover'>
+        <table class='table table-bordered table-striped table-condensed table-hover'  role='grid' aria-describedby='dataServer_info' style='width: 100%;font-size:12px;' id='dataServer' >
             ".$this->setKolomHeader()."
             <tbody>
               $kolomData
@@ -529,7 +665,82 @@ class refRelease extends baseObject{
     return $formEdit;
   }
 
-
+  function dateConversion($tanggal){
+    // $arrayTanggal = explode("/",$tanggal);
+    // $getJam = explode("-",$tanggal);
+    // $arrayJam = explode(":",$getJam[1]);
+    // return "20".str_replace($arrayJam[0].":".$arrayJam[1].":".$arrayJam[2],"",$arrayTanggal[2])."".$this->genNumber($arrayTanggal[1])."-".$this->genNumber($arrayTanggal[0])." ".$arrayJam[0].":".$arrayJam[1];
+    $arrayTanggal =  explode("+",$tanggal);
+    $explodeJam = explode(":",$arrayTanggal[1]);
+    return $arrayTanggal[0]." ".$explodeJam[0].":".$explodeJam[1];
+  }
+  function dateToNumber($tanggal){
+    $tanggal = str_replace("-","",$tanggal);
+    $tanggal = str_replace(" ","",$tanggal);
+    $tanggal = str_replace(":","",$tanggal);
+    return $tanggal;
+  }
+  function genNumber($num, $dig=2){
+    $tambah = pow(10,$dig);//100000;
+    $tmp = ($num + $tambah).'';
+    return substr($tmp,1,$dig);
+  }
+  function generateMonth($arrayMonth){
+    return $arrayMonth['month'];
+  }
+  function listFileRelease($id,$idRelease) {
+    $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
+    $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
+    $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
+    $getDataRelease = $this->sqlArray($this->sqlQuery("select * from ref_release where id = '$idRelease'"));
+    $dirSumber = $getDataRelease['directory_location'];
+    $contentAWK = '{ print "{\"file\":\""$4"\",\"tanggal\":\""$3"\",\"size\":\""$2"\"} "}';
+    $prinst = '"%-8g %8s %-.22T+ %p\n"';
+    $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"find $dirSumber -type f -printf $prinst | sort -r | awk '$contentAWK'"));
+    return "[".str_replace(" ","",$comand)."]";
+  }
+  function getJsonFileTarget($fileTarget,$id) {
+    $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$id'"));
+    $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
+    $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
+    $contentAWK = '{ print "{\"file\":\""$4"\",\"tanggal\":\""$3"\",\"size\":\""$2"\"} "}';
+    $prinst = '"%-8g %8s %-.22T+ %p\n"';
+    $comand =  str_replace("} \n{","},{",$this->sshCommand($sshConnection,"find $fileTarget -type f -printf $prinst | sort -r | awk '$contentAWK'"));
+    return "[".str_replace(" ","",$comand)."]";
+  }
+  function pushFileSelected($idServer,$fileLocation){
+    $getDataServer = $this->sqlArray($this->sqlQuery("select * from ref_server where id = '$idServer'"));
+    $sshConnection = $this->sshConnect($getDataServer['alamat_ip'],$getDataServer['port_ftp']);
+    $this->sshLogin($sshConnection,$getDataServer['user_ftp'],$getDataServer['password_ftp']);
+    $arrayFolder = explode("/",$fileLocation);
+    $arrayLong = sizeof($arrayFolder)- 1;
+    $target = strstr($fileLocation, $arrayFolder[$arrayLong], true);
+    $this->sshCommand($sshConnection,"mkdir -p $target");
+    ssh2_scp_send($sshConnection,$fileLocation,$fileLocation);
+  }
+  function filterExtension($word){
+      $result = 0;
+      for ($i=0; $i < sizeof($this->blockListExtension); $i++) {
+        if(strpos($word, $this->blockListExtension[$i][0]) !== false){
+          $result += 1;
+        }
+      }
+      return $result;
+  }
+  function unFilterExtension($word,$arrayAllowedExtension){
+      $arrayAllowedExtension = explode("\n",$arrayAllowedExtension);
+      $result = 0;
+      for ($i=0; $i < sizeof($arrayAllowedExtension); $i++) {
+        $filterWord = str_replace("\r","",$arrayAllowedExtension[$i]);
+        $filterWord = str_replace("//","/",$filterWord);
+        $filterWord = str_replace("\t","",$filterWord);
+        $filterWord = str_replace(" ","",$filterWord);
+        if(strpos($word, $filterWord) !== false){
+          $result += 1;
+        }
+      }
+      return $result;
+  }
 }
 $refRelease = new refRelease();
 

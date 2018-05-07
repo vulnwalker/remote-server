@@ -2,7 +2,9 @@ var refRelease = new baseObject2({
 	prefix : 'refRelease',
 	url : 'pages.php?page=refRelease',
 	formName : 'refReleaseForm',
-
+	idFileCheck : 0,
+	optionPushFile : 0,
+	optionPushDataBase : 0,
 	getJumlahChecked: function() {
     var jmldata= document.getElementById( this.prefix+'_jmlcek' ).value;
     for(var i=0; i < jmldata; i++){
@@ -66,7 +68,9 @@ var refRelease = new baseObject2({
 		return (((sign)?'':'-') + '' + num + ',' + cents);
 	},
 	setValueFilter: function(a){
-		$("#filterCari").val(a.value);
+		// $("#filterCari").val(a.value);
+		var table = $('#dataServer').DataTable();
+		table.search($(a).val()).draw() ;
 	},
 	refreshList: function(){
 		$.ajax({
@@ -202,6 +206,7 @@ var refRelease = new baseObject2({
 		  }
 		},
 		executeRelease: function(){
+		  var me = this;
 			swal({
 		      title: "Push Release ?",
 		      text: "",
@@ -219,8 +224,15 @@ var refRelease = new baseObject2({
 										success: function(data) {
 										var resp = eval('(' + data + ')');
 											if(resp.err==''){
-													$("#closeModal").click();
-													refRelease.pushRelease(1);
+												  swal.close();
+													document.getElementById("logPush").value += "COUNTING ...";
+													var textarea = document.getElementById("logPush");
+													textarea.scrollTop = textarea.scrollHeight;
+													$("#prosesBarValue").attr("data-value","1");
+													$("#prosesBarWarna").attr("style","width:"+"1"+"%");
+													$("#prosesBarText").text("1");
+													me.idFileCheck = resp.content.idFileCheck;
+													refRelease.prosesPush(1,resp.content.namaFile,resp.content.jumlahData,1);
 											}else{
 												refRelease.errorAlert(resp.err);
 											}
@@ -228,25 +240,37 @@ var refRelease = new baseObject2({
 								});
 		    });
 		},
-		pushRelease: function(urutanKe){
-				$.ajax({
-					type:'POST',
-					data : $("#"+refRelease.formName+"_release").serialize()+"&urutanKe="+urutanKe,
-					url: refRelease.url+'&API=pushRelease',
-						success: function(data) {
-						var resp = eval('(' + data + ')');
-							if(resp.err==''){
-								if(resp.content.status == 'OK'){
-									refRelease.suksesAlert("Push Success",refRelease.refreshList);
+		prosesPush: function(nomorUrut,namaFile,jumlahData,urutanServer){
+				var me = this;
+	      $.ajax({
+	        type:'POST',
+	        data : $("#"+this.formName+"_release").serialize()+"&nomorUrut="+nomorUrut+"&jumlahData="+jumlahData+"&namaFile="+namaFile+"&idFileCheck="+me.idFileCheck+"&urutanServer="+urutanServer,
+	        url: this.url+'&API=prosesPush',
+	          success: function(data) {
+	          var resp = eval('(' + data + ')');
+							document.getElementById("logPush").value += "\n"+resp.content.logPush;
+							var textarea = document.getElementById("logPush");
+							textarea.scrollTop = textarea.scrollHeight;
+	            if(resp.content.sukses!=''){
+								$("#prosesBarValue").attr("data-value",100);
+								$("#prosesBarWarna").attr("style","width:"+100+"%");
+								$("#prosesBarText").text("100%");
+								if(resp.content.nextServer == '1'){
+									urutanServer = urutanServer + 1;
+									me.prosesPush(1,resp.content.namaFile,jumlahData,urutanServer);
 								}else{
-									refRelease.pushRelease(resp.content.urutanKe);
+										alert("PUSH SUCCESS");
 								}
-							}else{
-								refRelease.errorAlert(resp.err);
-							}
-						}
-				});
-		},
+	            }else{
+								$("#prosesBarValue").attr("data-value",resp.content.persen);
+								$("#prosesBarWarna").attr("style","width:"+resp.content.persen+"%");
+								$("#prosesBarText").text(resp.content.persenText);
+								nomorUrut = nomorUrut + 1;
+	              me.prosesPush(nomorUrut,resp.content.namaFile,jumlahData,urutanServer);
+	            }
+	          }
+	      });
+			},
 		detailRelease: function(id){
 			window.location = "pages.php?page=detailRelease&id="+id;
 		},
