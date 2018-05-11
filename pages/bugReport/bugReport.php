@@ -11,39 +11,60 @@ class bugReport extends baseObject{
     }
 	  switch($_GET['API']){
       case 'refreshList':{
-        if(!empty($filterCari)){
-          $arrKondisi[] = "nama_server like '%$filterCari%' ";
-          $arrKondisi[] = "alias like '%$filterCari%' ";
-          $arrKondisi[] = "alamat_ip like '%$filterCari%' ";
-          $arrKondisi[] = "user_ftp like '%$filterCari%' ";
-          $arrKondisi[] = "password_ftp like '%$filterCari%' ";
-          $arrKondisi[] = "port_ftp like '%$filterCari%' ";
-          $arrKondisi[] = "status like '%$filterCari%' ";
-          $kondisi = join(" or ",$arrKondisi);
-          $kondisi = " where $kondisi ";
-        }
-        // if(!empty($limitTable)){
-        //     if($pageKe == 1){
-        //        $queryLimit  = " limit 0,$limitTable";
-        //     }else{
-        //        $dataMulai = ($pageKe - 1)  * $limitTable;
-        //        $dataMulai +=1;
-        //        $queryLimit  = " limit $dataMulai,$limitTable";
-        //     }
-        // }
-        // if (!empty($sorter)) {
-        //   $kondisiSort = "ORDER BY $sorter $ascending";
-        // }
+
+
         $cek = "select * from $this->tableName $kondisi";
         $content=array('tableContent' => $this->generateTable($kondisi));
-        // $getData = $this->sqlQuery("select * from $tableName $kondisi $kondisiSort $queryLimit");
 
   		break;
   		}
-      case 'Edit':{
-        $content = array("idEdit" => $bugReport_cb[0]);
-  		break;
-  		}
+        case 'Edit':{
+          $dataBug = json_decode($this->getDataBug(" where id = '".$bugReport_cb[0]."'"));
+          $formCaption = "UPDATE STATUS";
+          $arrayStatus = array(
+              array("0","BELUM DITANGANI"),
+              array("1","PROSES"),
+              array("2","SELESAI"),
+          );
+          $comboStatus = $this->cmbArray("statusBug",$dataBug[0]->status,$arrayStatus," ","class='form-control'");
+          $content="
+          <div class='modal fade bs-example-modal-lg' id='modalRelease' tabindex='-1' role='dialog' aria-labelledby='myLargeModalLabel' aria-hidden='true'>
+            <form name='".$this->formName."_edit' id='".$this->formName."_edit'>
+              <div class='modal-dialog modal-lg'>
+                  <div class='modal-content'>
+                      <div class='modal-header'>
+                          <button type='button' class='close' data-dismiss='modal' aria-hidden='true'>&times;</button>
+                          <h4 class='modal-title'>$formCaption</h4>
+                      </div>
+                      <div class='modal-body'>
+                        <div class='form-group'>
+                          <div class='row'>
+                            <label class='col-sm-3 control-label' style='margin-top:6px;'>STATUS</label>
+                            <div class='col-sm-9'>
+                              $comboStatus
+                            </div>
+                          </div>
+                        </div>
+                        <div class='form-group'>
+                          <div class='row'>
+                            <label class='col-sm-3 control-label' style='margin-top:6px;'>NOTE</label>
+                            <div class='col-sm-9'>
+                              <textarea class='form-control' id='noteReport' name='noteReport'  style='margin-top:10px;'>".$dataBug[0]->note."</textarea>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class='modal-footer'>
+                          <input type='hidden' name='idEdit' id='idEdit' value='".$bugReport_cb[0]."'>
+                          <button type='button' class='btn btn-primary' onclick=$this->Prefix.saveEdit(".$bugReport_cb[0].");>Simpan</button>
+                          <button type='button' class='btn btn-default' data-dismiss='modal' id='closeModal'>Batal</button>
+                      </div>
+                  </div>
+              </div>
+            </form>
+          </div>";
+    		break;
+    		}
       case 'ManageDisk':{
         $content = array("idEdit" => $bugReport_cb[0]);
   		break;
@@ -86,40 +107,16 @@ class bugReport extends baseObject{
   		break;
   		}
       case 'saveEdit':{
-  			if(empty($namaServer)){
-          $err = "Isi Nama Server";
-        }elseif(empty($alamatIP)){
-          $err = "Isi Alamat Server";
-        }elseif(empty($userFTP)){
-          $err = "Isi User FTP";
-        }elseif(empty($passwordFTP)){
-          $err = "Isi Password FTP";
-        }elseif(empty($ftpPort)){
-          $err = "Isi PORT FTP";
-        }elseif(empty($userMysql)){
-          $err = "Isi User FTP";
-        }elseif(empty($passwordMysql)){
-          $err = "Isi Password FTP";
-        }elseif(empty($portMysql)){
-          $err = "Isi PORT FTP";
-        }
-        if(empty($err)){
-          $dataUpdate = array(
-            'nama_server' => $namaServer,
-            'alias' => $aliasServer,
-            'alamat_ip' => $alamatIP,
-            'user_ftp' => $userFTP,
-            'password_ftp' => $passwordFTP,
-            'port_ftp' => $ftpPort,
-            'user_mysql' => $userMysql,
-            'password_mysql' => $passwordMysql,
-            'port_mysql' => $portMysql,
-            // 'status' => $statusServer,
-          );
-          $query = $this->sqlUpdate($this->tableName,$dataUpdate,"id = '$idEdit'");
-          $this->sqlQuery($query);
-          $cek = $query;
-        }
+            $dataUpdate = [
+              'note' => $noteReport,
+              'status' => $statusBug,
+              'idEdit' => $idEdit,
+            ];
+            $ch = curl_init('http://cs.pilar.web.id/apiBug/update.php');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $dataUpdate);
+            $response = json_decode(curl_exec($ch));
+            $content = $response->content;
   		break;
   		}
       case 'Hapus':{
@@ -156,43 +153,58 @@ class bugReport extends baseObject{
   function loadScript(){
     return "
     <script type='text/javascript' src='js/bugReport/bugReport.js'></script>
-    <link rel='stylesheet' type='text/css' href='assets/frontend-elements/blog.css'>
 
-    <!-- Owlcarousel -->
-    <link rel='stylesheet' type='text/css' href='assets/widgets/owlcarousel/owlcarousel.css'>
-    <script type='text/javascript' src='assets/widgets/owlcarousel/owlcarousel.js'></script>
-    <script type='text/javascript' src='assets/widgets/owlcarousel/owlcarousel-demo.js'></script>
-
-    <!-- Lazyload -->
-
-    <script type='text/javascript' src='assets/widgets/lazyload/lazyload.js'></script>
+    <style>
+      .dataTables_filter{
+        display:none;
+      }
+    </style>
+    <link rel='stylesheet' type='text/css' href='assets/widgets/datatable/datatable.css'>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable.js'></script>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable-bootstrap.js'></script>
+    <script type='text/javascript' src='assets/widgets/datatable/datatable-tabletools.js'></script>
     <script type='text/javascript'>
-        /* Lazyload */
-
-        $(function() {
-            $('img.lazy').lazyload({
-                effect: 'fadeIn',
-                threshold: 100
-            });
+    $(document).ready(function() {
+      var table = $('#dataServer').DataTable({
+           lengthMenu: [
+               [ 1, 2, 4, 8, 16, 32, 64, 128, -1 ],
+               [ '1', '2', '4', '8', '16', '32', '64', '128', 'Show all' ]
+           ]
+      });
+    $('#dataServer tbody').on( 'click', 'tr', function () {
+        $(this).toggleClass('tr-selected');
+    } );
+    $('#dataTables_filter').attr('style','display:none;');
+        $('.bootstrap-datepicker').bsdatepicker({
+            format: 'dd-mm-yyyy'
         });
-    </script>
-
-    <!-- PrettyPhoto modals -->
-
-    <link rel='stylesheet' type='text/css' href='assets/widgets/pretty-photo/prettyphoto.css'>
-    <script type='text/javascript' src='assets/widgets/pretty-photo/prettyphoto.js'></script>
-    <script type='text/javascript'>
-        /* PrettyPhoto */
-
-        $(document).ready(function() {
-            $('.prettyphoto').prettyPhoto();
-        });
+    });
     </script>
     ";
   }
 
   function setMenuEdit(){
-    $setMenuEdit = "    ";
+    $setMenuEdit = "
+    <div id='header-nav-right'>
+    <a href='#' class='hdr-btn popover-button' title='Search' data-placement='bottom' data-id='#popover-search'>
+      <i class='glyph-icon icon-search'></i>
+    </a>
+    <div class='hide' id='popover-search'>
+      <div class='pad5A '>
+          <div class='input-group'>
+              <input type='text' class='form-control' id='filterCari' name='filterCari' onkeyup=$this->Prefix.setValueFilter(this) placeholder='Cari data'>
+              <span class='input-group-btn' onclick=$this->Prefix.setValueFilter(document.getElementById('filterCari'));>
+                  <a class='btn btn-primary' >Cari</a>
+              </span>
+          </div>
+      </div>
+    </div>
+    <a class='header-btn' style='cursor:pointer;' id='logout-btn' onclick=$this->Prefix.Edit(); title='Edit'>
+      <i class='glyph-icon icon-pencil'></i>
+    </a>
+    </div>
+
+    ";
     return $setMenuEdit;
   }
   function pageContent(){
@@ -205,20 +217,11 @@ class bugReport extends baseObject{
     <div class='row'>
         <div class='col-md-12'>
             ".$this->generateTable($idBug)."
-            <div class='text-center'>
-                <ul class='pagination pagination-lg'>
-                    <li><a href='#'>«</a></li>
-                    <li class='active'><a href='#'>1 <span class='sr-only'>(current)</span></a></li>
-                    <li><a href='#'>2</a></li>
-                    <li><a href='#'>3</a></li>
-                    <li><a href='#'>4</a></li>
-                    <li><a href='#'>5</a></li>
-                    <li><a href='#'>»</a></li>
-                </ul>
-            </div>
         </div>
 
     </div>
+    <div id='tempatModal'> </div>
+
 
 
     ";
@@ -230,93 +233,80 @@ class bugReport extends baseObject{
     <thead>
       <tr>
           <th style='width:20px !important;'>No</th>
-          <th width='20' style='text-align:center;'>".$this->checkAll(25,$this->Prefix)."</th>
-          <th width='200'>Nama Server</th>
-          <th width='100'>Alias</th>
-          <th width='100'>Alamat IP</th>
-          <th width='100'>User FTP</th>
-          <th width='100'>Password FTP</th>
-          <th width='100'>Port FTP</th>
-          <th width='100'>User Mysql</th>
-          <th width='100'>Password Mysql</th>
-          <th width='100'>Port Mysql</th>
+          <th width='10'></th>
+          <th width='200'>PEMDA</th>
+          <th width='100'>APLIKASI</th>
+          <th width='100'>DESKRIPSI</th>
+          <th width='100'>TANGGAL</th>
+          <th width='100'>FILE</th>
+          <th width='100'>STATUS</th>
+          <th width='100'>ACTION</th>
       </tr>
     </thead>";
     return $kolomHeader;
   }
-  function setKolomData($no,$arrayData){
-    foreach ($arrayData as $key => $value) {
-        $$key = $value;
-    }
-    if($status == '1'){
-      $statusServer = "LIVE";
-    }elseif($status == '2'){
-      $statusServer = "ERROR";
-    }elseif($status == '3'){
-      $statusServer = "DIE";
-    }
-    $tableRow = "
-    <tr class='$classRow'>
-        <td  style='text-align:center;'>$no</td>
-        <td style='text-align:center;'>".$this->setCekBox($no - 1,$id,$this->Prefix)."</td>
-        <td >$nama_server</td>
-        <td>$alias</td>
-        <td>$alamat_ip</td>
-        <td>$user_ftp</td>
-        <td>$password_ftp</td>
-        <td>$port_ftp</td>
-        <td>$user_mysql</td>
-        <td'>$password_mysql</td>
-        <td>$port_mysql</td>
-    </tr>
-    ";
-    return $tableRow;
-  }
+
   function generateTable($kondisiTable){
     $no = 1;
       $jsonData =$this->getDataBug();
       $deocdedJson = json_decode($jsonData);
       for ($i=0; $i < sizeof($deocdedJson) ; $i++) {
-        $kolomData.= $this->listBug($deocdedJson[$i]);
+        $kolomData.= $this->listBug($deocdedJson[$i],$no);
+        $no++;
       }
     $htmlTable = "
       <form name='$this->formName' id='$this->formName'>
-
-        $kolomData
+        <table class='table table-bordered table-striped table-condensed table-hover'  role='grid' aria-describedby='dataServer_info' style='width: 100%;font-size:12px;' id='dataServer' >
+            ".$this->setKolomHeader()."
+            <tbody>
+              $kolomData
+            </tbody>
+        </table>
         <input type='hidden' name='".$this->Prefix."_jmlcek' id='".$this->Prefix."_jmlcek' value='0'>
       </form>
     ";
     return $htmlTable;
   }
-  function listBug($dataBug){
-      return
-      "<div class='blog-box row'>
-          <div class='post-content-wrapper col-md-12'>
-              <a class='post-title' href='#' title=''>
-                  <h3>".$dataBug->namaProduk."</h3>
+  function listBug($dataBug,$no){
+    if($dataBug->status == '0'){
+      $status = "Belum ditangani";
+    }elseif($dataBug->status == '1'){
+      $status = "Dalam Proses";
+    }elseif($dataBug->status == '2'){
+      $status = "Perbaikan Selesai";
+    }
+    $isi = strip_tags(base64_decode($dataBug->deskripsi));
 
-              </a>
-              <div class='post-meta'>
-                  <span>
-                      <i class='glyph-icon icon-user'></i>
-                      <a href='#' title=''>".$dataBug->namaPemda."</a>
-                  </span>
-                  <span>
-                      <i class='glyph-icon icon-clock-o'></i>
-                      21 December 2014
-                  </span>
+    if (strlen($isi) > 250) {
 
-              </div>
-              <div class='post-content'>
-                  <p>".base64_decode($dataBug->deskripsi)."</p>
-              </div>
-              <a href='#' class='btn btn-sm btn-default' title='Read more'>Download File</a>
-          </div>
-      </div>";
+     $stringCut = substr($isi, 0, 250);
+
+     $isi = substr($stringCut, 0, strrpos($stringCut, ' ')).'...';
+    }
+    $arrayFile= $dataBug->file;
+    for ($i=0; $i < sizeof($arrayFile); $i++) {
+      $listFile[]= "<a href='".$arrayFile[$i]->fileLocation."' target='_blank'>DOWNLOAD</a>";
+    }
+
+
+    $tableRow = "
+    <tr class='$classRow'>
+        <td align='center'>$no</td>
+        <td style='text-align:center;'>".$this->setCekBox($no - 1,$dataBug->id,$this->Prefix)."</td>
+        <td>".$dataBug->namaPemda."</td>
+        <td>".$dataBug->namaProduk."</td>
+        <td>".$isi."</td>
+        <td>".$this->generateDate($dataBug->tanggal)."</td>
+        <td>".implode(" | ",$listFile)."</td>
+        <td>$status</td>
+        <td align='center'><button class='btn btn-info'><i class='fa fa-eye'></i> LIHAT</button></td>
+    </tr>
+    ";
+    return $tableRow;
   }
   function getDataBug($kondisiTable){
     $post = [
-            'kondisiTable' => $kondisiTable,
+            'kondisi' => $kondisiTable,
           ];
       $ch = curl_init('http://cs.pilar.web.id/apiBug/list.php');
       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

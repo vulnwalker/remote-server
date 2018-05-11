@@ -157,7 +157,7 @@ class refRelease extends baseObject{
               $persenText = $persen."%";
               $sukses = "";
             }
-            if($urutanServer == sizeof($listServer)){
+            if($urutanServer == (sizeof($listServer) + 1)){
               $sukses = "OK";
               $nextServer = "0";
             }

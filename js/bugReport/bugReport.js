@@ -66,7 +66,9 @@ var bugReport = new baseObject2({
 		return (((sign)?'':'-') + '' + num + ',' + cents);
 	},
 	setValueFilter: function(a){
-		$("#filterCari").val(a.value);
+		// $("#filterCari").val(a.value);
+		var table = $('#dataServer').DataTable();
+		table.search($(a).val()).draw() ;
 	},
 	refreshList: function(){
 		$.ajax({
@@ -78,36 +80,62 @@ var bugReport = new baseObject2({
 			success: function(data) {
 				var resp = eval('(' + data + ')');
 				if(resp.err==''){
-					$("#bugReportForm").html(resp.content.tableContent);
+
+					window.location.reload();
 				}else{
 					bugReport.errorAlert(resp.err);
 				}
 			}
 		});
 	},
+	exec_body_scripts: function(text) {
+		 var scripts = '';
+		 var cleaned = text.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, function(){
+				 scripts += arguments[1] + '\n';
+				 return '';
+		 });
+
+		 if (window.execScript){
+				 window.execScript(scripts);
+		 } else {
+				 var head = document.getElementsByTagName('head')[0];
+				 var scriptElement = document.createElement('script');
+				 scriptElement.setAttribute('type', 'text/javascript');
+				 scriptElement.innerText = scripts;
+				 head.appendChild(scriptElement);
+				 head.removeChild(scriptElement);
+		 }
+		 return cleaned;
+
+  },
 	Baru: function(){
 		window.location = this.url+"&action=new";
 	},
 	Edit: function(){
-	  var errMsg = bugReport.getJumlahChecked();
+		var errMsg = bugReport.getJumlahChecked();
 		urlEdit = this.url;
-	  if(errMsg == ''){
-	    $.ajax({
-	      type:'POST',
-	      data : $("#"+this.formName).serialize(),
-	      url: this.url+'&API=Edit',
-	      success: function(data) {
-	        var resp = eval('(' + data + ')');
-	        if(resp.err==''){
-	          window.location = urlEdit+"&action=edit&idEdit="+resp.content.idEdit;
-	        }else{
-	          bugReport.errorAlert(resp.err);
-	        }
-	      }
-	    });
-	  }else{
-	     bugReport.errorAlert(errMsg);
-	  }
+		if(errMsg == ''){
+			$.ajax({
+				type:'POST',
+				data : $("#"+this.formName).serialize(),
+				url: this.url+'&API=Edit',
+				success: function(data) {
+					var resp = eval('(' + data + ')');
+					if(resp.err==''){
+						$("#modalRelease").remove();
+						$("#tempatModal").html(resp.content);
+						$("#modalRelease").modal();
+						"use strict";
+						$(".multi-select").multiSelect();
+						$(".ms-container").append('<i class="glyph-icon icon-exchange"></i>');
+					}else{
+						bugReport.errorAlert(resp.err);
+					}
+				}
+			});
+		}else{
+			 bugReport.errorAlert(errMsg);
+		}
 	},
 	ManageDisk: function(){
 	  var errMsg = bugReport.getJumlahChecked();
@@ -191,33 +219,39 @@ var bugReport = new baseObject2({
 	        });
 	      // });
 		},
-  saveEdit: function(idEdit){
-	  // swal({
-	  //       title: "Simpan Data ?",
-	  //       text: "",
-	  //       type: "info",
-	  //       confirmButtonText: "Ya",
-	  //       cancelButtonText: "Tidak",
-	  //       showCancelButton: true,
-	  //       closeOnConfirm: false,
-	  //       showLoaderOnConfirm: true
-	  //     }, function () {
-	        $.ajax({
-	          type:'POST',
-	          data : $("#"+this.formName+"_edit").serialize()+"&idEdit="+idEdit,
-	          url: this.url+'&API=saveEdit',
-	            success: function(data) {
-	            var resp = eval('(' + data + ')');
-	              if(resp.err==''){
-	                bugReport.suksesAlert("Data Tersimpan",bugReport.homePage);
-	              }else{
-	                bugReport.errorAlert(resp.err);
-	              }
-	            }
-	        });
-	      // });
-		},
+		saveEdit: function(idEdit){
+			var me = this;
 
+		  // swal({
+		  //       title: "Simpan Data ?",
+		  //       text: "",
+		  //       type: "info",
+		  //       confirmButtonText: "Ya",
+		  //       cancelButtonText: "Tidak",
+		  //       showCancelButton: true,
+		  //       closeOnConfirm: false,
+		  //       showLoaderOnConfirm: true
+		  //     }, function () {
+		        $.ajax({
+		          type:'POST',
+		          data : $("#"+this.formName+"_edit").serialize()+"&idEdit="+idEdit,
+		          url: this.url+'&API=saveEdit',
+		            success: function(data) {
+		            var resp = eval('(' + data + ')');
+		              if(resp.err==''){
+		                me.suksesAlert("Data Tersimpan",me.closeModal);
+										me.refreshList();
+		              }else{
+		                me.errorAlert(resp.err);
+		              }
+		            }
+		        });
+		      // });
+			},
+			closeModal: function(){
+				swal.close();
+				$("#closeModal").click();
+			}
 
 
 });
